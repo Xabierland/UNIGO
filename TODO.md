@@ -3,10 +3,6 @@
 ## Prerrequisitos
 
 - [ ] Elegir un nombre para el grupo
-- [ ] Definir el alcance del proyecto
-  - [ ] Idea general
-  - [ ] Actividades a crear
-  - [ ] Componentes a desarrollar
-  - [ ] Tecnologías a utilizar
+- [X] Definir el alcance del proyecto
 - [ ] Mandar el correo al profesorado
-- [ ] Configurar el repositorio del proyecto
+- [X] Configurar el repositorio del proyecto
