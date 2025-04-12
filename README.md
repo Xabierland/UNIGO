@@ -38,6 +38,6 @@ Las intrucciones se encuentran en el directorio `docs/Guia`
 Este proyecto utiliza dos licencias diferentes según el tipo de contenido:
 
 - **Código fuente** (`/app`): Licenciado bajo la [GNU General Public License v3.0 (GPLv3)](/LICENSE).
-- **Documentación** (`/docs`): Licenciada bajo [Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)](/LICENSE-docs.md).
+- **Documentación** (`/docs`): Licenciada bajo [Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)](/LICENSE-CC-BY-NC.md).
 
 Si deseas reutilizar cualquier parte del proyecto, asegúrate de cumplir con las condiciones específicas de cada licencia.
