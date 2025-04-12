@@ -1,0 +1,17 @@
+cff-version: 1.0.0
+message: "Si utilizas este trabajo, por favor cita el siguiente artículo."
+title: "UNIGO by "
+authors:
+  - family-names: "Dueñas Fernandez"
+    given-names: "Iñigo"
+  - family-names: "Etxaniz Monge"
+    given-names: "Eneko"
+  - family-names: "Gabiña Barañano"
+    given-names: "Xabier"
+  - family-names: "Palacios Orueta"
+    given-names: "Irune"
+version: "1.0.0"
+date-released:
+repository-code: "https://github.com/Xabierland/UNIGO"
+license: "GPLv3"
+type: "software"
