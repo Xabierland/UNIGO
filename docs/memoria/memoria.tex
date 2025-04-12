@@ -1,0 +1,48 @@
+\documentclass[a4paper,12pt]{report}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx, csquotes, longtable, array, booktabs, xparse, float, titlesec, enumitem, dingbat, soul, multicol, listings}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[margin=2cm]{geometry}
+
+% Añadir la bibliografía
+%\usepackage[backend=biber, style=numeric, sorting=ynt]{biblatex}
+%\addbibresource{guia.bib}
+
+% Cambia el color de los links
+\usepackage{hyperref}
+\hypersetup{hidelinks}
+
+% Elimina la palabra "Capítulo" de los títulos de los capítulos
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries}{}{0pt}{\Huge\thechapter.\space}
+
+\titleformat{name=\chapter,numberless}[display]
+  {\normalfont\bfseries}{}{0pt}{\Huge}
+
+\titlespacing*{\chapter}{0pt}{-50pt}{20pt}
+
+% Idioma predeterminado (Español)
+\selectlanguage{spanish}
+
+\begin{document}
+  \begin{titlepage}
+      \centering
+      \includegraphics[width=0.6\textwidth]{img/logo.jpg}\\
+      \vspace{1cm}
+      \Large Ingeniería Informática de Gestión y Sistemas de Información\\
+      \vspace{3cm}
+      \Huge Desarrollo Avanzado de Software\\
+      \vspace{0.5cm}
+      \huge \textbf{Memoria de Desarrollo}\\
+      \vspace{6cm}
+      \Large Autores:\\
+      \vspace{0.2cm}
+      \large Dueñas Fernandez, Iñigo\\
+      \large Etxaniz Monge, Eneko\\
+      \large Gabiña Barañano, Xabier\\
+      \large Palacios Orueta, Irune\\
+      \vfill
+      \today
+  \end{titlepage}
+\end{document}
