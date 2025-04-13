@@ -57,7 +57,7 @@ Las instrucciones de la aplicación se encuentran en el directorio `docs/Guia`
 
 ## Autores
 
-- XXX formado por:
+- ehunzango formado por:
   - Dueñas Fernández, Iñigo
   - Etxaniz Monge, Eneko
   - Gabiña Barañano, Xabier
