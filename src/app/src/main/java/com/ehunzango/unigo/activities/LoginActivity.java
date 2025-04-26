@@ -23,41 +23,35 @@ import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.auth.FirebaseUser;
 
 /**
- * Actividad para gestionar el inicio de sesión y registro de usuarios
+ * Actividad para gestionar el inicio de sesión (anónimo, Google)
+ * y alojar los fragments de login/registro por email.
  */
 public class LoginActivity extends BaseActivity {
 
     private static final String TAG = "LoginActivity";
-    private static final String WEB_CLIENT_ID = "YOUR_WEB_CLIENT_ID"; // Reemplazar con el ID real
+    private static final String WEB_CLIENT_ID = "YOUR_WEB_CLIENT_ID"; // Reemplazar por tu ID real
 
+    private View rootView;
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
     private MaterialButton googleSignInButton;
     private MaterialButton anonymousSignInButton;
-    private View rootView;
 
     private FirebaseAuthService authService;
     private FirebaseUserService userService;
-    
-    // Para inicio de sesión con Google
     private ActivityResultLauncher<Intent> googleSignInLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        
-        // Inicializar vistas
+
         initViews();
-        
-        // Inicializar servicios
+
         authService = FirebaseAuthService.getInstance();
         userService = FirebaseUserService.getInstance();
-        
-        // Configurar Google Sign In
+
         authService.initGoogleSignIn(this, WEB_CLIENT_ID);
-        
-        // Configurar launcher para Google Sign In
         setupGoogleSignInLauncher();
     }
 
@@ -68,154 +62,112 @@ public class LoginActivity extends BaseActivity {
         viewPager = findViewById(R.id.viewPager);
         googleSignInButton = findViewById(R.id.googleSignInButton);
         anonymousSignInButton = findViewById(R.id.anonymousSignInButton);
-        
-        // Configurar ViewPager con TabLayout
-        setupViewPager();
-        
-        // Configurar listeners
-        setupClickListeners();
-    }
-    
-    private void setupViewPager() {
-        AuthPagerAdapter authPagerAdapter = new AuthPagerAdapter(this);
-        viewPager.setAdapter(authPagerAdapter);
-        
-        // Vincular TabLayout con ViewPager2
-        new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
-            switch (position) {
-                case 0:
-                    tab.setText(R.string.login_tab);
-                    break;
-                case 1:
-                    tab.setText(R.string.register_tab);
-                    break;
-            }
+
+        // Configura las pestañas de Login/Register
+        AuthPagerAdapter adapter = new AuthPagerAdapter(this);
+        viewPager.setAdapter(adapter);
+        new TabLayoutMediator(tabLayout, viewPager, (tab, pos) -> {
+            tab.setText(pos == 0
+                ? getString(R.string.login_tab)
+                : getString(R.string.register_tab));
         }).attach();
-    }
-    
-    private void setupClickListeners() {
-        // Botón de Google
+
+        // Botones de Google y anónimo
         googleSignInButton.setOnClickListener(v -> signInWithGoogle());
-        
-        // Botón anónimo
         anonymousSignInButton.setOnClickListener(v -> signInAnonymously());
     }
-    
+
     private void setupGoogleSignInLauncher() {
         googleSignInLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    // Procesar resultado
-                    Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
-                    authService.handleGoogleSignInResult(task, new FirebaseAuthService.AuthCallback() {
-                        @Override
-                        public void onSuccess(FirebaseUser user) {
-                            // Guardar en base de datos
-                            saveUserAndNavigate(user);
-                        }
-                        
-                        @Override
-                        public void onError(String errorMessage) {
-                            showError(errorMessage);
-                        }
-                    });
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                // Llamada directa sin variable intermedia
+                Task<GoogleSignInAccount> task =
+                    GoogleSignIn.getSignedInAccountFromIntent(result.getData());
+
+                authService.handleGoogleSignInResult(task, new FirebaseAuthService.AuthCallback() {
+                    @Override
+                    public void onSuccess(FirebaseUser user) {
+                        // Mismo patrón: navegar YA y guardar en background
+                        showMessage(getString(R.string.success_login));
+                        navigateToMainActivity();
+                        userService.saveUser(user, new FirebaseUserService.UserCallback() {
+                            @Override
+                            public void onSuccess(com.ehunzango.unigo.models.User userModel) {
+                                Log.d(TAG, "Usuario Google guardado correctamente");
+                            }
+                            @Override
+                            public void onError(String errorMessage) {
+                                Log.e(TAG, "Error guardando usuario Google: " + errorMessage);
+                            }
+                        });
+                    }
+                    @Override
+                    public void onError(String errorMessage) {
+                        showError(errorMessage);
+                    }
                 });
+            }
+        );
     }
-    
-    // Métodos para iniciar sesión
-    
+
     private void signInWithGoogle() {
-        Intent signInIntent = authService.getGoogleSignInIntent();
-        googleSignInLauncher.launch(signInIntent);
+        Intent intent = authService.getGoogleSignInIntent();
+        googleSignInLauncher.launch(intent);
     }
-    
+
     private void signInAnonymously() {
-        // Mostrar un indicador de progreso
-        View rootView = findViewById(android.R.id.content);
-        Snackbar loadingSnackbar = Snackbar.make(rootView, "Iniciando sesión anónima...", Snackbar.LENGTH_INDEFINITE);
-        loadingSnackbar.show();
-        
-        // Intentar el inicio de sesión anónimo
+        // Mostramos snackbar con texto inline
+        Snackbar loading = Snackbar.make(
+            rootView,
+            "Iniciando sesión anónima…",
+            Snackbar.LENGTH_INDEFINITE
+        );
+        loading.show();
+
         authService.loginAnonymously(new FirebaseAuthService.AuthCallback() {
             @Override
             public void onSuccess(FirebaseUser user) {
-                // Log para depuración
-                Log.d(TAG, "Login anónimo exitoso: " + user.getUid());
-                loadingSnackbar.dismiss();
-                
-                // Si el login fue exitoso, ir directamente a MainActivity
+                loading.dismiss();
                 showMessage(getString(R.string.success_login));
                 navigateToMainActivity();
-                
-                // Intentar guardar el usuario en segundo plano
                 userService.saveUser(user, new FirebaseUserService.UserCallback() {
                     @Override
                     public void onSuccess(com.ehunzango.unigo.models.User userModel) {
-                        // Solo log, ya navegamos a MainActivity
-                        Log.d(TAG, "Usuario guardado en base de datos correctamente");
+                        Log.d(TAG, "Usuario anónimo guardado correctamente");
                     }
-                    
                     @Override
                     public void onError(String errorMessage) {
-                        // Solo log, ya navegamos a MainActivity
-                        Log.e(TAG, "Error al guardar usuario en base de datos: " + errorMessage);
+                        Log.e(TAG, "Error guardando usuario anónimo: " + errorMessage);
                     }
                 });
             }
-            
             @Override
             public void onError(String errorMessage) {
-                // Log para depuración
-                Log.e(TAG, "Error en login anónimo: " + errorMessage);
-                loadingSnackbar.dismiss();
+                loading.dismiss();
                 showError("Error en inicio de sesión anónimo: " + errorMessage);
             }
         });
     }
-    
-    // Método unificado para guardar usuario y navegar
-    private void saveUserAndNavigate(FirebaseUser user) {
-        // Guardar en base de datos y navegar
-        userService.saveUser(user, new FirebaseUserService.UserCallback() {
-            @Override
-            public void onSuccess(com.ehunzango.unigo.models.User userModel) {
-                showMessage(getString(R.string.success_login));
-                navigateToMainActivity();
-            }
-            
-            @Override
-            public void onError(String errorMessage) {
-                // A pesar del error, continuamos
-                Log.e(TAG, "Error al guardar usuario: " + errorMessage);
-                showMessage(getString(R.string.success_login));
-                navigateToMainActivity();
-            }
-        });
-    }
-    
-    // Métodos para comunicarse con los fragmentos
-    
-    public void onLoginSuccess(FirebaseUser user) {
-        saveUserAndNavigate(user);
-    }
-    
-    public void onRegisterSuccess(FirebaseUser user) {
-        Log.d(TAG, "Registro exitoso para usuario: " + user.getUid());
-        saveUserAndNavigate(user);
-    }
-    
+
+    /** Muestra un Snackbar de error */
     public void showError(String errorMessage) {
         Snackbar.make(rootView, errorMessage, Snackbar.LENGTH_LONG).show();
-        Log.e(TAG, "Error: " + errorMessage);
+        Log.e(TAG, errorMessage);
     }
-    
+
+    /** Muestra un Snackbar informativo */
     public void showMessage(String message) {
         Snackbar.make(rootView, message, Snackbar.LENGTH_SHORT).show();
     }
-    
-    private void navigateToMainActivity() {
+
+    /** Navega a MainActivity y limpia el back stack */
+    public void navigateToMainActivity() {
         Intent intent = new Intent(this, MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.setFlags(
+            Intent.FLAG_ACTIVITY_NEW_TASK |
+            Intent.FLAG_ACTIVITY_CLEAR_TASK
+        );
         startActivity(intent);
         finish();
     }
