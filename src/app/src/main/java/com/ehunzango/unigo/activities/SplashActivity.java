@@ -24,7 +24,7 @@ import com.ehunzango.unigo.R;
 public class SplashActivity extends BaseActivity {
 
     private CardView centerCircle;
-    private ImageView logo1, logo2, logo3, logo4;
+    private ImageView logo1, logo2, logo3;
     private ImageView slideUpArrow;
     private View slideUpContainer;
     private GestureDetectorCompat gestureDetector;
@@ -57,7 +57,7 @@ public class SplashActivity extends BaseActivity {
         int logoSizePx = (int) (logoSize * getResources().getDisplayMetrics().density);
 
         // Configurar layout para cada logo
-        for (ImageView logo : new ImageView[]{logo1, logo2, logo3, logo4}) {
+        for (ImageView logo : new ImageView[]{logo1, logo2, logo3}) {
             logo.getLayoutParams().width = logoSizePx;
             logo.getLayoutParams().height = logoSizePx;
             logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -92,9 +92,9 @@ public class SplashActivity extends BaseActivity {
             int centerY = (int) (centerCircle.getY() + (float) centerCircle.getHeight() / 2);
             
             // Asignar diferentes radios y ángulos iniciales para cada logo
-            float radius1 = 1000f; // Radio más grande para el logo1
-            float radius2 = 750f; // Radio mediano para el logo2
-            float radius3 = 500f; // Radio grande para el logo3
+            float radius1 = 650f; // Radio más grande para el logo1
+            float radius2 = 500f; // Radio mediano para el logo2
+            float radius3 = 350f; // Radio grande para el logo3
             
             // Diferentes ángulos iniciales para distribuir mejor los logos
             positionLogoInOrbit(logo1, centerX, centerY, 90, radius1); 
@@ -102,9 +102,9 @@ public class SplashActivity extends BaseActivity {
             positionLogoInOrbit(logo3, centerX, centerY, 330, radius3);
             
             // Diferentes velocidades para cada logo
-            startOrbitAnimation(logo1, 7500, true);   // Lento, sentido horario
+            startOrbitAnimation(logo1, 10000, true);   // Lento, sentido horario
             startOrbitAnimation(logo2, 7500, false);  // Más lento, sentido antihorario
-            startOrbitAnimation(logo3, 7500, true);   // Más rápido, sentido horario
+            startOrbitAnimation(logo3, 5000, true);   // Más rápido, sentido horario
         });
     }
     
