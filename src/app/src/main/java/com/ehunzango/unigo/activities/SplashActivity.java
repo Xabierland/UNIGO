@@ -342,11 +342,9 @@ public class SplashActivity extends BaseActivity {
     }
     
     private void navigateToLogin() {
-        // Detener la animación antes de navegar
-        animationHandler.removeCallbacks(animationRunnable);
-        
-        // Falta implementar LoginActivity
-        //navigateTo(LoginActivity.class);
+        // Navegar a LoginActivity
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
         overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_down);
         finish();
     }
