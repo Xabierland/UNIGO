@@ -3,7 +3,6 @@ package com.ehunzango.unigo.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -13,7 +12,6 @@ import com.ehunzango.unigo.services.FirebaseUserService;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationBarView;
-import com.google.firebase.auth.FirebaseUser;
 
 /**
  * Actividad principal de la aplicación después del inicio de sesión.
@@ -60,7 +58,7 @@ public class MainActivity extends BaseActivity {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 int itemId = item.getItemId();
-                
+
                 // Navegar al fragmento correspondiente basado en el ítem seleccionado
                 if (itemId == R.id.nav_map) {
                     // Cargar fragmento de mapa
@@ -75,7 +73,7 @@ public class MainActivity extends BaseActivity {
                     showToast("Ajustes - Por implementar");
                     return true;
                 }
-                
+
                 return false;
             }
         });
