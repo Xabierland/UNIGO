@@ -45,15 +45,18 @@ public class LoginActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
         initViews();
 
         authService = FirebaseAuthService.getInstance();
         userService = FirebaseUserService.getInstance();
 
-        authService.initGoogleSignIn(this, WEB_CLIENT_ID);
+        // Obtiene automáticamente el web client ID del JSON procesado
+        String webClientId = getString(R.string.default_web_client_id);
+        authService.initGoogleSignIn(this, webClientId);
+
         setupGoogleSignInLauncher();
     }
+
 
     @Override
     protected void initViews() {
