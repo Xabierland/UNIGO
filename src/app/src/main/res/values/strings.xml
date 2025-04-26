@@ -5,5 +5,58 @@
     <string name="swipe_up_description">Desliza hacia arriba para continuar</string>
     <string name="logo_description">Logo de entidad</string>
 
-    <!-- Cadenas de texto de la pantalla de inicio de sesion -->
+    <!-- Cadenas de texto de la pantalla de inicio de sesión -->
+    <string name="login_title">Accede a UNIGO</string>
+    <string name="login_tab">Iniciar sesión</string>
+    <string name="register_tab">Registrarse</string>
+    <string name="email_hint">Correo electrónico</string>
+    <string name="password_hint">Contraseña</string>
+    <string name="name_hint">Nombre completo</string>
+    <string name="confirm_password_hint">Confirmar contraseña</string>
+    <string name="login_button">Iniciar sesión</string>
+    <string name="register_button">Registrarse</string>
+    <string name="forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="or_text">o continúa con</string>
+    <string name="google_sign_in">Continuar con Google</string>
+    <string name="phone_sign_in">Continuar con teléfono</string>
+    <string name="anonymous_sign_in">Continuar sin cuenta</string>
+    
+    <!-- Verificación por teléfono -->
+    <string name="phone_verification_title">Verificación por teléfono</string>
+    <string name="phone_verification_subtitle">Te enviaremos un código de verificación por SMS</string>
+    <string name="phone_hint">Número de teléfono (+34 123456789)</string>
+    <string name="send_code_button">Enviar código</string>
+    <string name="verification_code_hint">Código de verificación</string>
+    <string name="code_sent_message">Se ha enviado un código a tu teléfono</string>
+    <string name="resend_code_button">Reenviar</string>
+    <string name="verify_code_button">Verificar</string>
+    
+    <!-- Mensajes de error -->
+    <string name="error_invalid_email">Correo electrónico no válido</string>
+    <string name="error_invalid_password">La contraseña debe tener al menos 6 caracteres</string>
+    <string name="error_passwords_not_match">Las contraseñas no coinciden</string>
+    <string name="error_empty_name">El nombre no puede estar vacío</string>
+    <string name="error_invalid_phone">Número de teléfono no válido</string>
+    <string name="error_empty_code">El código de verificación no puede estar vacío</string>
+    
+    <!-- Mensajes de éxito -->
+    <string name="success_login">Inicio de sesión exitoso</string>
+    <string name="success_register">Registro exitoso</string>
+    <string name="success_verification">Verificación exitosa</string>
+    <string name="success_reset_password">Se ha enviado un correo para restablecer tu contraseña</string>
+    
+    <!-- Diálogos -->
+    <string name="dialog_reset_password_title">Restablecer contraseña</string>
+    <string name="dialog_reset_password_message">Introduce tu correo electrónico para recibir instrucciones de restablecimiento de contraseña</string>
+    <string name="dialog_button_send">Enviar</string>
+    <string name="dialog_button_cancel">Cancelar</string>
+    
+    <!-- Navegación principal -->
+    <string name="nav_map">Mapa</string>
+    <string name="nav_profile">Perfil</string>
+    <string name="nav_settings">Ajustes</string>
+    <string name="action_logout">Cerrar sesión</string>
+    <string name="logout_title">Cerrar sesión</string>
+    <string name="logout_message">¿Estás seguro de que quieres cerrar sesión?</string>
+    <string name="anonymous_user">Usuario anónimo</string>
 </resources>

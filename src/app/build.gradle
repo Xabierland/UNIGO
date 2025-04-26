@@ -1,5 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
+
+    // Firebase
+    id 'com.google.gms.google-services'
 }
 
 android {
@@ -37,4 +40,16 @@ dependencies {
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
+
+    // Firebase
+    implementation platform('com.google.firebase:firebase-bom:33.13.0')
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-database'
+
+    // Firebase - Google Sign-In
+    implementation 'com.google.android.gms:play-services-auth:21.0.0'
+
+    // CircleImageView
+    implementation 'de.hdodenhof:circleimageview:3.1.0'
 }

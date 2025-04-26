@@ -3,9 +3,11 @@ package com.ehunzango.unigo.activities;
 import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,15 +20,20 @@ import androidx.cardview.widget.CardView;
 import androidx.core.view.GestureDetectorCompat;
 
 import com.ehunzango.unigo.R;
+import com.ehunzango.unigo.services.FirebaseAuthService;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Actividad de inicio que muestra una animación de carga y permite
- * deslizar hacia arriba para acceder a la pantalla de login.
+ * Actividad de inicio que muestra una animación de carga, verifica el estado
+ * de autenticación del usuario y navega a la pantalla correspondiente.
  */
 public class SplashActivity extends BaseActivity {
 
+    private static final String TAG = "SplashActivity";
     private CardView centerCircle;
     private ImageView logo1, logo2, logo3;
     private ImageView slideUpArrow;
@@ -34,7 +41,8 @@ public class SplashActivity extends BaseActivity {
     private GestureDetectorCompat gestureDetector;
     
     private boolean isAppReady = false;
-    private static final int LOADING_DELAY = 3000; // 3 segundos para simulación de carga
+    private static final int MIN_SPLASH_TIME = 2000; // 2 segundos mínimos para la pantalla splash
+    private AtomicBoolean authCheckComplete = new AtomicBoolean(false);
     
     // Variables para el movimiento flotante
     private int screenWidth;
@@ -54,13 +62,22 @@ public class SplashActivity extends BaseActivity {
     private Handler animationHandler = new Handler(Looper.getMainLooper());
     private Runnable animationRunnable;
     
+    // FirebaseAuthService
+    private FirebaseAuthService authService;
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         
+        // Inicializar servicio de autenticación
+        authService = FirebaseAuthService.getInstance();
+        
         // Llamar a initViews después de setContentView para que las vistas ya estén infladas
         initViews();
+        
+        // Iniciar verificación de autenticación
+        checkAuthentication();
     }
     
     @Override
@@ -129,9 +146,78 @@ public class SplashActivity extends BaseActivity {
         
         // Configurar detector de gestos
         setupGestureDetector();
+    }
+    
+    /**
+     * Verifica el estado de autenticación y navega a la pantalla correspondiente
+     * después de un tiempo mínimo para mostrar la pantalla de splash.
+     */
+    private void checkAuthentication() {
+        // Establecer tiempo mínimo para la pantalla splash
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            // Marcar que el tiempo mínimo ha pasado y proceder si la verificación está lista
+            isAppReady = true;
+            proceedIfReady();
+        }, MIN_SPLASH_TIME);
+
+        // Verificar estado de autenticación
+        FirebaseUser currentUser = authService.getCurrentUser();
         
-        // Simular tiempo de carga
-        simulateLoading();
+        if (currentUser != null) {
+            // Usuario existe, verificar que sigue siendo válido
+            Log.d(TAG, "Usuario existente, verificando validez: " + currentUser.getUid());
+            
+            currentUser.reload()
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Usuario recargado con éxito: " + currentUser.getUid());
+                    // Usuario válido, marcar verificación como completada
+                    authCheckComplete.set(true);
+                    proceedIfReady();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error al recargar usuario: " + e.getMessage());
+                    // Usuario inválido (cuenta eliminada, deshabilitada, etc.)
+                    authService.logout();
+                    authCheckComplete.set(true);
+                    proceedIfReady();
+                });
+        } else {
+            // No hay usuario autenticado
+            Log.d(TAG, "No hay usuario autenticado");
+            authCheckComplete.set(true);
+            proceedIfReady();
+        }
+    }
+    
+    /**
+     * Procede a navegar a la siguiente pantalla si todas las comprobaciones están listas
+     */
+    private void proceedIfReady() {
+        if (isAppReady && authCheckComplete.get()) {
+            // Verificar si hay un usuario válido
+            if (authService.isUserLoggedIn()) {
+                // Usuario autenticado, ir a MainActivity
+                Log.d(TAG, "Navegando a MainActivity");
+                navigateToMainActivity();
+            } else {
+                // No hay usuario, mostrar flecha para continuar a login
+                Log.d(TAG, "Mostrando opción para ir a LoginActivity");
+                showContinueOption();
+            }
+        }
+    }
+    
+    /**
+     * Muestra la flecha para continuar hacia la pantalla de login
+     */
+    private void showContinueOption() {
+        // Mostrar la flecha con animación
+        ObjectAnimator fadeIn = ObjectAnimator.ofFloat(slideUpArrow, "alpha", 0f, 1f);
+        fadeIn.setDuration(500);
+        fadeIn.start();
+        
+        // Animación para indicar deslizamiento hacia arriba
+        startSlideUpHintAnimation();
     }
     
     private void initLogoPositions() {
@@ -315,22 +401,6 @@ public class SplashActivity extends BaseActivity {
         });
     }
     
-    private void simulateLoading() {
-        // Simular tiempo de carga de la aplicación
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            isAppReady = true;
-            
-            // Mostrar la flecha con animación
-            ObjectAnimator fadeIn = ObjectAnimator.ofFloat(slideUpArrow, "alpha", 0f, 1f);
-            fadeIn.setDuration(500);
-            fadeIn.start();
-            
-            // Animación para indicar deslizamiento hacia arriba
-            startSlideUpHintAnimation();
-            
-        }, LOADING_DELAY);
-    }
-    
     private void startSlideUpHintAnimation() {
         // Animación para sugerir el deslizamiento hacia arriba
         ObjectAnimator moveAnimator = ObjectAnimator.ofFloat(
@@ -342,12 +412,18 @@ public class SplashActivity extends BaseActivity {
     }
     
     private void navigateToLogin() {
-        // Detener la animación antes de navegar
-        animationHandler.removeCallbacks(animationRunnable);
-        
-        // Falta implementar LoginActivity
-        //navigateTo(LoginActivity.class);
+        // Navegar a LoginActivity
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
         overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_down);
+        finish();
+    }
+    
+    private void navigateToMainActivity() {
+        // Navegar directamente a MainActivity
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
         finish();
     }
 }
