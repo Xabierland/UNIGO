@@ -26,19 +26,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Configuración común para todas las actividades
-        configureActionBar();
         initViews();
-    }
-
-    /**
-     * Configura la ActionBar con opciones comunes como el botón de retroceso
-     */
-    protected void configureActionBar() {
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null && !(this instanceof MainActivity)) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setDisplayShowHomeEnabled(true);
-        }
     }
 
     /**
@@ -48,19 +36,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected abstract void initViews();
 
     /**
-     * Gestiona el botón de retroceso en la ActionBar
-     */
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    /**
-     * Método para mostrar un Toast de corta duración
+     * Método para mostrar un Toast corto
      * 
      * @param message Mensaje a mostrar
      */
@@ -69,7 +45,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     /**
-     * Método para mostrar un Toast de larga duración
+     * Método para mostrar un Toast largo
      * 
      * @param message Mensaje a mostrar
      */
@@ -130,7 +106,6 @@ public abstract class BaseActivity extends AppCompatActivity {
      */
     protected void finishActivity() {
         finish();
-        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
 
     /**
@@ -219,14 +194,5 @@ public abstract class BaseActivity extends AppCompatActivity {
             return activeNetworkInfo != null && activeNetworkInfo.isConnected();
         }
         return false;
-    }
-
-    /**
-     * Implementación del método onBackPressed para añadir una transición
-     */
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
 }

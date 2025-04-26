@@ -6,4 +6,11 @@
     </style>
 
     <style name="Theme.UNIGO" parent="Base.Theme.UNIGO" />
+
+    <!-- Tema sin barra de acción y pantalla completa para SplashScreen -->
+    <style name="Theme.UNIGO.NoActionBar" parent="Theme.UNIGO">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
 </resources>
