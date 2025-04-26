@@ -8,7 +8,6 @@ import androidx.annotation.NonNull;
 
 import com.ehunzango.unigo.R;
 import com.ehunzango.unigo.services.FirebaseAuthService;
-import com.ehunzango.unigo.services.FirebaseUserService;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationBarView;
@@ -21,7 +20,6 @@ public class MainActivity extends BaseActivity {
 
     private BottomNavigationView bottomNav;
     private FirebaseAuthService authService;
-    private FirebaseUserService userService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,15 +31,6 @@ public class MainActivity extends BaseActivity {
         
         // Inicializar servicios
         authService = FirebaseAuthService.getInstance();
-        userService = FirebaseUserService.getInstance();
-        
-        // Verificar si hay un usuario autenticado
-        if (!authService.isUserLoggedIn()) {
-            // No hay usuario autenticado, redirigir a LoginActivity
-            navigateToLoginActivity();
-            finish();
-            return;
-        }
         
         // Configurar navegación
         setupNavigation();
@@ -105,6 +94,7 @@ public class MainActivity extends BaseActivity {
     
     private void navigateToLoginActivity() {
         Intent intent = new Intent(this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
     }

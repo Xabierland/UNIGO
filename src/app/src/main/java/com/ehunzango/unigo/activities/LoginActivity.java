@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -29,7 +28,7 @@ import com.google.firebase.auth.FirebaseUser;
 public class LoginActivity extends BaseActivity {
 
     private static final String TAG = "LoginActivity";
-    private static final String WEB_CLIENT_ID = "AIzaSyAU_hAK5SskHRFbzziliLq9M6iGA8Ew-Ng"; // Reemplazar con el ID real
+    private static final String WEB_CLIENT_ID = "YOUR_WEB_CLIENT_ID"; // Reemplazar con el ID real
 
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
@@ -60,9 +59,6 @@ public class LoginActivity extends BaseActivity {
         
         // Configurar launcher para Google Sign In
         setupGoogleSignInLauncher();
-        
-        // Verificar si ya hay un usuario autenticado
-        checkCurrentUser();
     }
 
     @Override
@@ -115,19 +111,7 @@ public class LoginActivity extends BaseActivity {
                         @Override
                         public void onSuccess(FirebaseUser user) {
                             // Guardar en base de datos
-                            userService.saveUser(user, new FirebaseUserService.UserCallback() {
-                                @Override
-                                public void onSuccess(com.ehunzango.unigo.models.User userModel) {
-                                    showMessage(getString(R.string.success_login));
-                                    navigateToMainActivity();
-                                }
-                                
-                                @Override
-                                public void onError(String errorMessage) {
-                                    showError("Inicio de sesión exitoso pero error al guardar datos: " + errorMessage);
-                                    navigateToMainActivity();
-                                }
-                            });
+                            saveUserAndNavigate(user);
                         }
                         
                         @Override
@@ -136,14 +120,6 @@ public class LoginActivity extends BaseActivity {
                         }
                     });
                 });
-    }
-    
-    private void checkCurrentUser() {
-        if (authService.isUserLoggedIn()) {
-            // Ya hay un usuario autenticado, ir directamente a MainActivity
-            navigateToMainActivity();
-            finish();
-        }
     }
     
     // Métodos para iniciar sesión
@@ -197,16 +173,35 @@ public class LoginActivity extends BaseActivity {
         });
     }
     
+    // Método unificado para guardar usuario y navegar
+    private void saveUserAndNavigate(FirebaseUser user) {
+        // Guardar en base de datos y navegar
+        userService.saveUser(user, new FirebaseUserService.UserCallback() {
+            @Override
+            public void onSuccess(com.ehunzango.unigo.models.User userModel) {
+                showMessage(getString(R.string.success_login));
+                navigateToMainActivity();
+            }
+            
+            @Override
+            public void onError(String errorMessage) {
+                // A pesar del error, continuamos
+                Log.e(TAG, "Error al guardar usuario: " + errorMessage);
+                showMessage(getString(R.string.success_login));
+                navigateToMainActivity();
+            }
+        });
+    }
+    
     // Métodos para comunicarse con los fragmentos
     
     public void onLoginSuccess(FirebaseUser user) {
-        showMessage(getString(R.string.success_login));
-        navigateToMainActivity();
+        saveUserAndNavigate(user);
     }
     
     public void onRegisterSuccess(FirebaseUser user) {
-        showMessage(getString(R.string.success_register));
-        navigateToMainActivity();
+        Log.d(TAG, "Registro exitoso para usuario: " + user.getUid());
+        saveUserAndNavigate(user);
     }
     
     public void showError(String errorMessage) {
@@ -219,7 +214,9 @@ public class LoginActivity extends BaseActivity {
     }
     
     private void navigateToMainActivity() {
-        navigateTo(MainActivity.class);
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
         finish();
     }
 }

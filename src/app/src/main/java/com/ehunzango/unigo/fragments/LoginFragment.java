@@ -1,7 +1,9 @@
 package com.ehunzango.unigo.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +17,7 @@ import androidx.fragment.app.Fragment;
 
 import com.ehunzango.unigo.R;
 import com.ehunzango.unigo.activities.LoginActivity;
+import com.ehunzango.unigo.activities.MainActivity;
 import com.ehunzango.unigo.services.FirebaseAuthService;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -27,6 +30,8 @@ import com.google.firebase.auth.FirebaseUser;
  */
 public class LoginFragment extends Fragment {
 
+    private static final String TAG = "LoginFragment";
+    
     private TextInputLayout emailLayout;
     private TextInputEditText emailEditText;
     private TextInputLayout passwordLayout;
@@ -105,25 +110,33 @@ public class LoginFragment extends Fragment {
         String email = emailEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
         
+        Log.d(TAG, "Intentando iniciar sesión con: " + email);
+        
         // Intentar inicio de sesión con Firebase
         authService.loginWithEmail(email, password, new FirebaseAuthService.AuthCallback() {
             @Override
             public void onSuccess(FirebaseUser user) {
-                setLoadingState(false);
+                Log.d(TAG, "Inicio de sesión exitoso para: " + user.getUid());
                 
-                // Notificar a la actividad que el login fue exitoso
-                if (getActivity() instanceof LoginActivity) {
-                    ((LoginActivity) getActivity()).onLoginSuccess(user);
+                // Ir directamente a MainActivity tras inicio de sesión exitoso
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        setLoadingState(false);
+                        navigateToMainActivity();
+                    });
                 }
             }
             
             @Override
             public void onError(String errorMessage) {
-                setLoadingState(false);
-                
-                // Mostrar error
-                if (getActivity() instanceof LoginActivity) {
-                    ((LoginActivity) getActivity()).showError(errorMessage);
+                Log.e(TAG, "Error en inicio de sesión: " + errorMessage);
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        setLoadingState(false);
+                        if (getActivity() instanceof LoginActivity) {
+                            ((LoginActivity) getActivity()).showError(errorMessage);
+                        }
+                    });
                 }
             }
         });
@@ -171,19 +184,38 @@ public class LoginFragment extends Fragment {
                 .show();
     }
     
-    private void setLoadingState(boolean isLoading) {
-        if (isLoading) {
-            progressBar.setVisibility(View.VISIBLE);
-            loginButton.setEnabled(false);
-            emailEditText.setEnabled(false);
-            passwordEditText.setEnabled(false);
-            forgotPasswordText.setEnabled(false);
-        } else {
-            progressBar.setVisibility(View.GONE);
-            loginButton.setEnabled(true);
-            emailEditText.setEnabled(true);
-            passwordEditText.setEnabled(true);
-            forgotPasswordText.setEnabled(true);
+    private void navigateToMainActivity() {
+        if (getActivity() == null) return;
+        
+        try {
+            // Mostrar mensaje de éxito
+            if (getActivity() instanceof LoginActivity) {
+                ((LoginActivity) getActivity()).showMessage(getString(R.string.success_login));
+            }
+            
+            // Navegar directamente a MainActivity con pequeño delay para mostrar el mensaje
+            new android.os.Handler().postDelayed(() -> {
+                try {
+                    Intent intent = new Intent(getActivity(), MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    getActivity().finish();
+                } catch (Exception e) {
+                    Log.e(TAG, "Error en navegación: " + e.getMessage());
+                }
+            }, 300);
+        } catch (Exception e) {
+            Log.e(TAG, "Error en navegación: " + e.getMessage());
         }
+    }
+    
+    private void setLoadingState(boolean isLoading) {
+        if (progressBar == null) return;
+        
+        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        loginButton.setEnabled(!isLoading);
+        emailEditText.setEnabled(!isLoading);
+        passwordEditText.setEnabled(!isLoading);
+        forgotPasswordText.setEnabled(!isLoading);
     }
 }

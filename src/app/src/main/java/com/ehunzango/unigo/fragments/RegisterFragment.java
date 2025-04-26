@@ -1,7 +1,9 @@
 package com.ehunzango.unigo.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +16,7 @@ import androidx.fragment.app.Fragment;
 
 import com.ehunzango.unigo.R;
 import com.ehunzango.unigo.activities.LoginActivity;
+import com.ehunzango.unigo.activities.MainActivity;
 import com.ehunzango.unigo.services.FirebaseAuthService;
 import com.ehunzango.unigo.services.FirebaseUserService;
 import com.google.android.material.button.MaterialButton;
@@ -27,6 +30,8 @@ import com.google.firebase.auth.UserProfileChangeRequest;
  */
 public class RegisterFragment extends Fragment {
 
+    private static final String TAG = "RegisterFragment";
+    
     private TextInputLayout nameLayout;
     private TextInputEditText nameEditText;
     private TextInputLayout emailLayout;
@@ -129,10 +134,14 @@ public class RegisterFragment extends Fragment {
         String email = emailEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
         
+        Log.d(TAG, "Iniciando registro para: " + email);
+        
         // Intentar registro con Firebase
         authService.registerWithEmail(email, password, new FirebaseAuthService.AuthCallback() {
             @Override
             public void onSuccess(FirebaseUser user) {
+                Log.d(TAG, "Registro exitoso en Firebase Auth: " + user.getUid());
+                
                 // Actualizar perfil de usuario con el nombre
                 UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
                         .setDisplayName(name)
@@ -140,67 +149,68 @@ public class RegisterFragment extends Fragment {
                 
                 user.updateProfile(profileUpdates)
                         .addOnCompleteListener(task -> {
-                            // Independientemente del resultado, intentar guardar el usuario y continuar
+                            Log.d(TAG, "Perfil actualizado: " + task.isSuccessful());
+                            
+                            // Guardar usuario en la base de datos para persistir la sesión
                             userService.saveUser(user, new FirebaseUserService.UserCallback() {
                                 @Override
                                 public void onSuccess(com.ehunzango.unigo.models.User userModel) {
-                                    setLoadingState(false);
-                                    
-                                    // Notificar a la actividad que el registro fue exitoso
-                                    if (getActivity() instanceof LoginActivity) {
-                                        requireActivity().runOnUiThread(() -> {
-                                            ((LoginActivity) getActivity()).onRegisterSuccess(user);
-                                        });
-                                    }
+                                    Log.d(TAG, "Usuario guardado en la base de datos");
+                                    navigateToMainActivity();
                                 }
                                 
                                 @Override
                                 public void onError(String errorMessage) {
-                                    setLoadingState(false);
-                                    
-                                    // A pesar del error al guardar, continuamos con el registro
-                                    // ya que el usuario se creó correctamente
-                                    if (getActivity() instanceof LoginActivity) {
-                                        requireActivity().runOnUiThread(() -> {
-                                            ((LoginActivity) getActivity()).showError(
-                                                    "Cuenta creada pero error al guardar datos: " + errorMessage);
-                                            ((LoginActivity) getActivity()).onRegisterSuccess(user);
-                                        });
-                                    }
+                                    Log.e(TAG, "Error al guardar usuario en la base de datos: " + errorMessage);
+                                    // A pesar del error en la base de datos, navegamos a MainActivity
+                                    navigateToMainActivity();
                                 }
                             });
                         });
-                }
-                
-                @Override
-                public void onError(String errorMessage) {
-                    setLoadingState(false);
-                    
-                    // Mostrar error
-                    if (getActivity() instanceof LoginActivity) {
-                        requireActivity().runOnUiThread(() -> {
+            }
+            
+            @Override
+            public void onError(String errorMessage) {
+                Log.e(TAG, "Error en registro: " + errorMessage);
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        setLoadingState(false);
+                        if (getActivity() instanceof LoginActivity) {
                             ((LoginActivity) getActivity()).showError(errorMessage);
-                        });
-                    }
+                        }
+                    });
                 }
-            });
+            }
+        });
+    }
+    
+    private void navigateToMainActivity() {
+        if (getActivity() == null) return;
+        
+        getActivity().runOnUiThread(() -> {
+            setLoadingState(false);
+            
+            // Mostrar mensaje de éxito
+            if (getActivity() instanceof LoginActivity) {
+                ((LoginActivity) getActivity()).showMessage(getString(R.string.success_register));
+            }
+            
+            // Navegar directamente a MainActivity
+            Intent intent = new Intent(getActivity(), MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            getActivity().finish();
+        });
     }
     
     private void setLoadingState(boolean isLoading) {
-        if (isLoading) {
-            progressBar.setVisibility(View.VISIBLE);
-            registerButton.setEnabled(false);
-            nameEditText.setEnabled(false);
-            emailEditText.setEnabled(false);
-            passwordEditText.setEnabled(false);
-            confirmPasswordEditText.setEnabled(false);
-        } else {
-            progressBar.setVisibility(View.GONE);
-            registerButton.setEnabled(true);
-            nameEditText.setEnabled(true);
-            emailEditText.setEnabled(true);
-            passwordEditText.setEnabled(true);
-            confirmPasswordEditText.setEnabled(true);
-        }
+        if (progressBar == null) return;
+        
+        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        registerButton.setEnabled(!isLoading);
+        nameEditText.setEnabled(!isLoading);
+        emailEditText.setEnabled(!isLoading);
+        passwordEditText.setEnabled(!isLoading);
+        confirmPasswordEditText.setEnabled(!isLoading);
     }
 }
