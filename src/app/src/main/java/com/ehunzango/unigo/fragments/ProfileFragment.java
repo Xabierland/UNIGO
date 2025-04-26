@@ -80,12 +80,6 @@ public class ProfileFragment extends Fragment {
             } else {
                 userEmailTextView.setVisibility(View.GONE);
             }
-            
-            // Mostrar avatar si está disponible (usando CircleImageView)
-            if (currentUser.getPhotoUrl() != null) {
-                // Aquí se cargaría la imagen usando Glide o Picasso
-                // Glide.with(this).load(currentUser.getPhotoUrl()).into(userAvatarImageView);
-            }
         }
     }
 }

@@ -29,7 +29,7 @@ import com.google.firebase.auth.FirebaseUser;
 public class LoginActivity extends BaseActivity {
 
     private static final String TAG = "LoginActivity";
-    private static final String WEB_CLIENT_ID = "YOUR_WEB_CLIENT_ID"; // Reemplazar con el ID real
+    private static final String WEB_CLIENT_ID = "AIzaSyAU_hAK5SskHRFbzziliLq9M6iGA8Ew-Ng"; // Reemplazar con el ID real
 
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
