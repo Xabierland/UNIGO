@@ -9,9 +9,7 @@ import android.os.Looper;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
-import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
 
 import androidx.cardview.widget.CardView;
@@ -39,10 +37,10 @@ public class SplashActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         
-        // Ocultar la barra de acción
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().hide();
-        }
+        // Llamar a initViews después de setContentView para que las vistas ya estén infladas
+        initViews();
+        
+        // Ya no es necesario ocultar la barra de acción porque la hemos quitado en el tema
     }
     
     @Override
@@ -51,22 +49,30 @@ public class SplashActivity extends BaseActivity {
         logo1 = findViewById(R.id.logo1);
         logo2 = findViewById(R.id.logo2);
         logo3 = findViewById(R.id.logo3);
-        logo4 = findViewById(R.id.logo4);
         slideUpArrow = findViewById(R.id.slideUpArrow);
         slideUpContainer = findViewById(R.id.slideUpContainer);
-        
-        // Configurar los logos (se deberían agregar recursos en drawable)
+
+        // Definir un tamaño fijo para todos los logos
+        int logoSize = 64; // tamaño en dp
+        int logoSizePx = (int) (logoSize * getResources().getDisplayMetrics().density);
+
+        // Configurar layout para cada logo
+        for (ImageView logo : new ImageView[]{logo1, logo2, logo3, logo4}) {
+            logo.getLayoutParams().width = logoSizePx;
+            logo.getLayoutParams().height = logoSizePx;
+            logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            logo.requestLayout();
+        }
+
         // Por ahora, usamos placeholders
-        logo1.setImageResource(android.R.drawable.ic_menu_compass);
-        logo2.setImageResource(android.R.drawable.ic_menu_directions);
-        logo3.setImageResource(android.R.drawable.ic_menu_mapmode);
-        logo4.setImageResource(android.R.drawable.ic_menu_mylocation);
+        logo1.setImageResource(R.drawable.ic_opendata);
+        logo2.setImageResource(R.drawable.ic_ehu);
+        logo3.setImageResource(R.drawable.ic_ehunzango);
         
         // Mostrar logos
         logo1.setVisibility(View.VISIBLE);
         logo2.setVisibility(View.VISIBLE);
         logo3.setVisibility(View.VISIBLE);
-        logo4.setVisibility(View.VISIBLE);
         
         // Iniciar animaciones
         startOrbitAnimations();
@@ -84,19 +90,21 @@ public class SplashActivity extends BaseActivity {
         centerCircle.post(() -> {
             int centerX = (int) (centerCircle.getX() + (float) centerCircle.getWidth() / 2);
             int centerY = (int) (centerCircle.getY() + (float) centerCircle.getHeight() / 2);
-            float orbitRadius = 200f; // Radio de la órbita
             
-            // Posicionar los logos alrededor del círculo central
-            positionLogoInOrbit(logo1, centerX, centerY, 0, orbitRadius);
-            positionLogoInOrbit(logo2, centerX, centerY, 90, orbitRadius);
-            positionLogoInOrbit(logo3, centerX, centerY, 180, orbitRadius);
-            positionLogoInOrbit(logo4, centerX, centerY, 270, orbitRadius);
+            // Asignar diferentes radios y ángulos iniciales para cada logo
+            float radius1 = 1000f; // Radio más grande para el logo1
+            float radius2 = 750f; // Radio mediano para el logo2
+            float radius3 = 500f; // Radio grande para el logo3
             
-            // Iniciar animaciones de órbita
-            startOrbitAnimation(logo1, 15000, true);  // 15 segundos por revolución
-            startOrbitAnimation(logo2, 20000, true);  // 20 segundos por revolución
-            startOrbitAnimation(logo3, 25000, true);  // 25 segundos por revolución
-            startOrbitAnimation(logo4, 18000, true);  // 18 segundos por revolución
+            // Diferentes ángulos iniciales para distribuir mejor los logos
+            positionLogoInOrbit(logo1, centerX, centerY, 90, radius1); 
+            positionLogoInOrbit(logo2, centerX, centerY, 210, radius2);
+            positionLogoInOrbit(logo3, centerX, centerY, 330, radius3);
+            
+            // Diferentes velocidades para cada logo
+            startOrbitAnimation(logo1, 7500, true);   // Lento, sentido horario
+            startOrbitAnimation(logo2, 7500, false);  // Más lento, sentido antihorario
+            startOrbitAnimation(logo3, 7500, true);   // Más rápido, sentido horario
         });
     }
     
@@ -218,7 +226,7 @@ public class SplashActivity extends BaseActivity {
     
     private void navigateToLogin() {
         // Falta implementar LoginActivity
-        //navigateTo(MainActivity.class);
+        //navigateTo(LoginActivity.class);
         overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_down);
         finish();
     }

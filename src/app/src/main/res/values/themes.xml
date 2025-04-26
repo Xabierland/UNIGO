@@ -1,5 +1,5 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Base application theme sin ActionBar para todas las actividades -->
     <style name="Base.Theme.UNIGO" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
@@ -7,10 +7,8 @@
 
     <style name="Theme.UNIGO" parent="Base.Theme.UNIGO" />
 
-    <!-- Tema sin barra de acción y pantalla completa para SplashScreen -->
-    <style name="Theme.UNIGO.NoActionBar" parent="Theme.UNIGO">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
+    <!-- Tema especial para SplashScreen con pantalla completa -->
+    <style name="Theme.UNIGO.Fullscreen" parent="Theme.UNIGO">
         <item name="android:windowFullscreen">true</item>
     </style>
 </resources>

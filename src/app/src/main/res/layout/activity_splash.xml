@@ -64,17 +64,6 @@
         app:layout_constraintTop_toTopOf="parent"
         android:contentDescription="@string/logo_description" />
 
-    <ImageView
-        android:id="@+id/logo4"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:visibility="invisible"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:contentDescription="@string/logo_description" />
-
     <!-- Indicador deslizable -->
     <FrameLayout
         android:id="@+id/slideUpContainer"

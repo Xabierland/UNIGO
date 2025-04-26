@@ -25,8 +25,8 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Configuración común para todas las actividades
-        initViews();
+        // Ya no llamamos a initViews() aquí para permitir que las actividades hijas
+        // establezcan su setContentView() primero
     }
 
     /**

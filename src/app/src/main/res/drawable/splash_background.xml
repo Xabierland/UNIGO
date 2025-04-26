@@ -7,11 +7,11 @@
         </shape>
     </item>
     
-    <!-- Patrón de líneas -->
+    <!-- Patrón de líneas usando shape en lugar de bitmap -->
     <item>
-        <bitmap
-            android:src="@drawable/pattern_diagonal_lines"
-            android:tileMode="repeat"
-            android:dither="true" />
+        <shape android:shape="rectangle">
+            <solid android:color="#00FFFFFF" />
+            <stroke android:width="1dp" android:color="#E0E0FF" android:dashWidth="4dp" android:dashGap="4dp" />
+        </shape>
     </item>
 </layer-list>
