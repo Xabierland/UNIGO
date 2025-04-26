@@ -140,7 +140,7 @@ public class RegisterFragment extends Fragment {
                 
                 user.updateProfile(profileUpdates)
                         .addOnCompleteListener(task -> {
-                            // Guardar usuario en la base de datos
+                            // Independientemente del resultado, intentar guardar el usuario y continuar
                             userService.saveUser(user, new FirebaseUserService.UserCallback() {
                                 @Override
                                 public void onSuccess(com.ehunzango.unigo.models.User userModel) {
@@ -148,7 +148,9 @@ public class RegisterFragment extends Fragment {
                                     
                                     // Notificar a la actividad que el registro fue exitoso
                                     if (getActivity() instanceof LoginActivity) {
-                                        ((LoginActivity) getActivity()).onRegisterSuccess(user);
+                                        requireActivity().runOnUiThread(() -> {
+                                            ((LoginActivity) getActivity()).onRegisterSuccess(user);
+                                        });
                                     }
                                 }
                                 
@@ -156,26 +158,32 @@ public class RegisterFragment extends Fragment {
                                 public void onError(String errorMessage) {
                                     setLoadingState(false);
                                     
-                                    // Mostrar error
+                                    // A pesar del error al guardar, continuamos con el registro
+                                    // ya que el usuario se creó correctamente
                                     if (getActivity() instanceof LoginActivity) {
-                                        ((LoginActivity) getActivity()).showError(
-                                                "Cuenta creada pero error al guardar datos: " + errorMessage);
+                                        requireActivity().runOnUiThread(() -> {
+                                            ((LoginActivity) getActivity()).showError(
+                                                    "Cuenta creada pero error al guardar datos: " + errorMessage);
+                                            ((LoginActivity) getActivity()).onRegisterSuccess(user);
+                                        });
                                     }
                                 }
                             });
                         });
-            }
-            
-            @Override
-            public void onError(String errorMessage) {
-                setLoadingState(false);
-                
-                // Mostrar error
-                if (getActivity() instanceof LoginActivity) {
-                    ((LoginActivity) getActivity()).showError(errorMessage);
                 }
-            }
-        });
+                
+                @Override
+                public void onError(String errorMessage) {
+                    setLoadingState(false);
+                    
+                    // Mostrar error
+                    if (getActivity() instanceof LoginActivity) {
+                        requireActivity().runOnUiThread(() -> {
+                            ((LoginActivity) getActivity()).showError(errorMessage);
+                        });
+                    }
+                }
+            });
     }
     
     private void setLoadingState(boolean isLoading) {

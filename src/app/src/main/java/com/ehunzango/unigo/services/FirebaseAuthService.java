@@ -89,13 +89,15 @@ public class FirebaseAuthService {
     // Registro con correo y contraseña
     public void registerWithEmail(String email, String password, AuthCallback callback) {
         mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        callback.onSuccess(task.getResult().getUser());
+                .addOnSuccessListener(authResult -> {
+                    if (authResult != null && authResult.getUser() != null) {
+                        callback.onSuccess(authResult.getUser());
                     } else {
-                        callback.onError("Error al registrar: " + 
-                                (task.getException() != null ? task.getException().getMessage() : "Desconocido"));
+                        callback.onError("Error: resultado de registro nulo");
                     }
+                })
+                .addOnFailureListener(e -> {
+                    callback.onError("Error al registrar: " + e.getMessage());
                 });
     }
 
@@ -115,13 +117,15 @@ public class FirebaseAuthService {
     // Inicio de sesión anónimo
     public void loginAnonymously(AuthCallback callback) {
         mAuth.signInAnonymously()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        callback.onSuccess(task.getResult().getUser());
+                .addOnSuccessListener(authResult -> {
+                    if (authResult != null && authResult.getUser() != null) {
+                        callback.onSuccess(authResult.getUser());
                     } else {
-                        callback.onError("Error al iniciar sesión anónima: " + 
-                                (task.getException() != null ? task.getException().getMessage() : "Desconocido"));
+                        callback.onError("Error: resultado de autenticación nulo");
                     }
+                })
+                .addOnFailureListener(e -> {
+                    callback.onError("Error al iniciar sesión anónima: " + e.getMessage());
                 });
     }
 

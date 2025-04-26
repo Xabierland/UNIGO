@@ -154,28 +154,45 @@ public class LoginActivity extends BaseActivity {
     }
     
     private void signInAnonymously() {
+        // Mostrar un indicador de progreso
+        View rootView = findViewById(android.R.id.content);
+        Snackbar loadingSnackbar = Snackbar.make(rootView, "Iniciando sesión anónima...", Snackbar.LENGTH_INDEFINITE);
+        loadingSnackbar.show();
+        
+        // Intentar el inicio de sesión anónimo
         authService.loginAnonymously(new FirebaseAuthService.AuthCallback() {
             @Override
             public void onSuccess(FirebaseUser user) {
-                // Guardar en base de datos
+                // Log para depuración
+                Log.d(TAG, "Login anónimo exitoso: " + user.getUid());
+                loadingSnackbar.dismiss();
+                
+                // Si el login fue exitoso, ir directamente a MainActivity
+                showMessage(getString(R.string.success_login));
+                navigateToMainActivity();
+                
+                // Intentar guardar el usuario en segundo plano
                 userService.saveUser(user, new FirebaseUserService.UserCallback() {
                     @Override
                     public void onSuccess(com.ehunzango.unigo.models.User userModel) {
-                        showMessage(getString(R.string.success_login));
-                        navigateToMainActivity();
+                        // Solo log, ya navegamos a MainActivity
+                        Log.d(TAG, "Usuario guardado en base de datos correctamente");
                     }
                     
                     @Override
                     public void onError(String errorMessage) {
-                        showError("Inicio de sesión anónimo exitoso pero error al guardar datos: " + errorMessage);
-                        navigateToMainActivity();
+                        // Solo log, ya navegamos a MainActivity
+                        Log.e(TAG, "Error al guardar usuario en base de datos: " + errorMessage);
                     }
                 });
             }
             
             @Override
             public void onError(String errorMessage) {
-                showError(errorMessage);
+                // Log para depuración
+                Log.e(TAG, "Error en login anónimo: " + errorMessage);
+                loadingSnackbar.dismiss();
+                showError("Error en inicio de sesión anónimo: " + errorMessage);
             }
         });
     }
