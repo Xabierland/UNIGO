@@ -9,6 +9,8 @@ import android.os.Looper;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.ImageView;
 
@@ -16,6 +18,8 @@ import androidx.cardview.widget.CardView;
 import androidx.core.view.GestureDetectorCompat;
 
 import com.ehunzango.unigo.R;
+
+import java.util.Random;
 
 /**
  * Actividad de inicio que muestra una animación de carga y permite
@@ -32,6 +36,24 @@ public class SplashActivity extends BaseActivity {
     private boolean isAppReady = false;
     private static final int LOADING_DELAY = 3000; // 3 segundos para simulación de carga
     
+    // Variables para el movimiento flotante
+    private int screenWidth;
+    private int screenHeight;
+    private Random random = new Random();
+    
+    // Vectores de velocidad para cada logo
+    private float[] velocityX = new float[3];
+    private float[] velocityY = new float[3];
+    
+    // Constantes para el movimiento
+    private static final float MIN_VELOCITY = 2.5f;
+    private static final float MAX_VELOCITY = 7.5f;
+    private static final float ROTATION_FACTOR = 0.2f;
+    
+    // Handler y Runnable para la animación
+    private Handler animationHandler = new Handler(Looper.getMainLooper());
+    private Runnable animationRunnable;
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,8 +61,13 @@ public class SplashActivity extends BaseActivity {
         
         // Llamar a initViews después de setContentView para que las vistas ya estén infladas
         initViews();
-        
-        // Ya no es necesario ocultar la barra de acción porque la hemos quitado en el tema
+    }
+    
+    @Override
+    protected void onDestroy() {
+        // Detener la animación cuando la actividad se destruye
+        animationHandler.removeCallbacks(animationRunnable);
+        super.onDestroy();
     }
     
     @Override
@@ -53,15 +80,17 @@ public class SplashActivity extends BaseActivity {
         slideUpContainer = findViewById(R.id.slideUpContainer);
 
         // Definir un tamaño fijo para todos los logos
-        int logoSize = 64; // tamaño en dp
+        int logoSize = 96; // tamaño en dp
         int logoSizePx = (int) (logoSize * getResources().getDisplayMetrics().density);
 
         // Configurar layout para cada logo
         for (ImageView logo : new ImageView[]{logo1, logo2, logo3}) {
-            logo.getLayoutParams().width = logoSizePx;
-            logo.getLayoutParams().height = logoSizePx;
-            logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            logo.requestLayout();
+            if (logo != null) {
+                logo.getLayoutParams().width = logoSizePx;
+                logo.getLayoutParams().height = logoSizePx;
+                logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                logo.requestLayout();
+            }
         }
 
         // Por ahora, usamos placeholders
@@ -74,8 +103,28 @@ public class SplashActivity extends BaseActivity {
         logo2.setVisibility(View.VISIBLE);
         logo3.setVisibility(View.VISIBLE);
         
-        // Iniciar animaciones
-        startOrbitAnimations();
+        // Obtener dimensiones de la pantalla cuando el layout esté listo
+        final View rootView = findViewById(android.R.id.content);
+        rootView.getViewTreeObserver().addOnGlobalLayoutListener(
+            new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    // Eliminar el listener para que no se llame múltiples veces
+                    rootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    
+                    // Obtener dimensiones de la pantalla
+                    screenWidth = rootView.getWidth();
+                    screenHeight = rootView.getHeight();
+                    
+                    // Iniciar animaciones una vez que tenemos las dimensiones
+                    initLogoPositions();
+                    initLogoVelocities();
+                    startFloatingAnimation();
+                }
+            }
+        );
+        
+        // Iniciar animación del círculo central
         startPulseAnimation();
         
         // Configurar detector de gestos
@@ -85,72 +134,140 @@ public class SplashActivity extends BaseActivity {
         simulateLoading();
     }
     
-    private void startOrbitAnimations() {
-        // Calcular las posiciones y comenzar las rotaciones
-        centerCircle.post(() -> {
-            int centerX = (int) (centerCircle.getX() + (float) centerCircle.getWidth() / 2);
-            int centerY = (int) (centerCircle.getY() + (float) centerCircle.getHeight() / 2);
-            
-            // Asignar diferentes radios y ángulos iniciales para cada logo
-            float radius1 = 650f; // Radio más grande para el logo1
-            float radius2 = 500f; // Radio mediano para el logo2
-            float radius3 = 350f; // Radio grande para el logo3
-            
-            // Diferentes ángulos iniciales para distribuir mejor los logos
-            positionLogoInOrbit(logo1, centerX, centerY, 90, radius1); 
-            positionLogoInOrbit(logo2, centerX, centerY, 210, radius2);
-            positionLogoInOrbit(logo3, centerX, centerY, 330, radius3);
-            
-            // Diferentes velocidades para cada logo
-            startOrbitAnimation(logo1, 10000, true);   // Lento, sentido horario
-            startOrbitAnimation(logo2, 7500, false);  // Más lento, sentido antihorario
-            startOrbitAnimation(logo3, 5000, true);   // Más rápido, sentido horario
-        });
-    }
-    
-    private void positionLogoInOrbit(ImageView logo, float centerX, float centerY, 
-                                      float angleDegrees, float radius) {
-        float angleRadians = (float) Math.toRadians(angleDegrees);
+    private void initLogoPositions() {
+        // Posicionar logos en lugares aleatorios de la pantalla
+        // pero evitando el círculo central
+        int centerX = screenWidth / 2;
+        int centerY = screenHeight / 2;
+        int safeRadius = centerCircle.getWidth() / 2 + 50; // Radio de seguridad alrededor del centro
         
-        // Calcular la posición X e Y basada en el ángulo y radio
-        float x = centerX + radius * (float) Math.cos(angleRadians) - logo.getWidth() / 2;
-        float y = centerY + radius * (float) Math.sin(angleRadians) - logo.getHeight() / 2;
-        
-        // Establecer la posición
-        logo.setX(x);
-        logo.setY(y);
-        logo.setTag(R.id.tag_orbit_angle, angleDegrees); // Guardar el ángulo para animación
-        logo.setTag(R.id.tag_orbit_radius, radius); // Guardar el radio para animación
-    }
-    
-    private void startOrbitAnimation(final ImageView logo, long duration, final boolean clockwise) {
-        final float centerX = centerCircle.getX() + centerCircle.getWidth() / 2;
-        final float centerY = centerCircle.getY() + centerCircle.getHeight() / 2;
-        final float radius = (float) logo.getTag(R.id.tag_orbit_radius);
-        
-        ValueAnimator animator = ValueAnimator.ofFloat(0, 360);
-        animator.setDuration(duration);
-        animator.setRepeatCount(ValueAnimator.INFINITE);
-        animator.setInterpolator(new LinearInterpolator());
-        
-        animator.addUpdateListener(animation -> {
-            float angle = (float) animation.getAnimatedValue();
-            if (!clockwise) {
-                angle = 360 - angle;
+        for (ImageView logo : new ImageView[]{logo1, logo2, logo3}) {
+            if (logo != null) {
+                float x, y;
+                float distance;
+                
+                // Generar posición aleatoria que no esté demasiado cerca del centro
+                do {
+                    x = random.nextInt(screenWidth - logo.getWidth());
+                    y = random.nextInt(screenHeight - logo.getHeight());
+                    
+                    // Calcular distancia al centro
+                    float dx = x + logo.getWidth()/2 - centerX;
+                    float dy = y + logo.getHeight()/2 - centerY;
+                    distance = (float) Math.sqrt(dx * dx + dy * dy);
+                    
+                } while (distance < safeRadius);
+                
+                logo.setX(x);
+                logo.setY(y);
+                
+                // Rotación inicial aleatoria
+                logo.setRotation(random.nextInt(360));
             }
+        }
+    }
+    
+    private void initLogoVelocities() {
+        // Iniciar con velocidades aleatorias
+        for (int i = 0; i < 3; i++) {
+            // Velocidad entre MIN_VELOCITY y MAX_VELOCITY (positiva o negativa)
+            velocityX[i] = MIN_VELOCITY + random.nextFloat() * (MAX_VELOCITY - MIN_VELOCITY);
+            velocityY[i] = MIN_VELOCITY + random.nextFloat() * (MAX_VELOCITY - MIN_VELOCITY);
             
-            float angleRadians = (float) Math.toRadians(angle);
-            float x = centerX + radius * (float) Math.cos(angleRadians) - logo.getWidth() / 2;
-            float y = centerY + radius * (float) Math.sin(angleRadians) - logo.getHeight() / 2;
-            
-            logo.setX(x);
-            logo.setY(y);
-            
-            // Rotar el logo sobre su propio eje
-            logo.setRotation(angle);
-        });
+            // 50% de probabilidad de que la velocidad sea negativa
+            if (random.nextBoolean()) velocityX[i] = -velocityX[i];
+            if (random.nextBoolean()) velocityY[i] = -velocityY[i];
+        }
+    }
+    
+    private void startFloatingAnimation() {
+        final ImageView[] logos = {logo1, logo2, logo3};
         
-        animator.start();
+        animationRunnable = new Runnable() {
+            @Override
+            public void run() {
+                // Mover cada logo según su velocidad
+                for (int i = 0; i < logos.length; i++) {
+                    ImageView logo = logos[i];
+                    if (logo == null) continue;
+                    
+                    // Obtener posición actual
+                    float x = logo.getX();
+                    float y = logo.getY();
+                    
+                    // Calcular nueva posición
+                    float newX = x + velocityX[i];
+                    float newY = y + velocityY[i];
+                    
+                    // Comprobar colisión con los bordes
+                    // Borde derecho
+                    if (newX + logo.getWidth() > screenWidth) {
+                        velocityX[i] = -Math.abs(velocityX[i]); // Invertir y garantizar que sea negativa
+                        newX = screenWidth - logo.getWidth();
+                    }
+                    // Borde izquierdo
+                    else if (newX < 0) {
+                        velocityX[i] = Math.abs(velocityX[i]); // Invertir y garantizar que sea positiva
+                        newX = 0;
+                    }
+                    
+                    // Borde inferior
+                    if (newY + logo.getHeight() > screenHeight) {
+                        velocityY[i] = -Math.abs(velocityY[i]); // Invertir y garantizar que sea negativa
+                        newY = screenHeight - logo.getHeight();
+                    }
+                    // Borde superior
+                    else if (newY < 0) {
+                        velocityY[i] = Math.abs(velocityY[i]); // Invertir y garantizar que sea positiva
+                        newY = 0;
+                    }
+                    
+                    // Comprobar colisión con el círculo central
+                    float centerX = centerCircle.getX() + centerCircle.getWidth() / 2;
+                    float centerY = centerCircle.getY() + centerCircle.getHeight() / 2;
+                    float logoX = newX + logo.getWidth() / 2;
+                    float logoY = newY + logo.getHeight() / 2;
+                    
+                    float dx = logoX - centerX;
+                    float dy = logoY - centerY;
+                    float distance = (float) Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Radio del círculo central + radio del logo
+                    float minDistance = (centerCircle.getWidth() / 2) + (logo.getWidth() / 2);
+                    
+                    if (distance < minDistance) {
+                        // Calcular vector normal de colisión
+                        float nx = dx / distance;
+                        float ny = dy / distance;
+                        
+                        // Reflejar vector de velocidad sobre el vector normal
+                        float dotProduct = 2 * (velocityX[i] * nx + velocityY[i] * ny);
+                        velocityX[i] = velocityX[i] - dotProduct * nx;
+                        velocityY[i] = velocityY[i] - dotProduct * ny;
+                        
+                        // Ajustar posición para evitar que se quede dentro del círculo
+                        float correctionDistance = minDistance - distance;
+                        newX = newX + correctionDistance * nx;
+                        newY = newY + correctionDistance * ny;
+                    }
+                    
+                    // Aplicar nueva posición
+                    logo.setX(newX);
+                    logo.setY(newY);
+                    
+                    // Aplicar rotación basada en la velocidad
+                    float currentRotation = logo.getRotation();
+                    float rotationChange = (Math.abs(velocityX[i]) + Math.abs(velocityY[i])) * ROTATION_FACTOR;
+                    logo.setRotation(currentRotation + rotationChange);
+                }
+                
+                // Programar la próxima iteración
+                animationHandler.postDelayed(this, 16); // ~60fps
+            }
+        };
+        
+        // Iniciar la animación
+        animationHandler.post(animationRunnable);
     }
     
     private void startPulseAnimation() {
@@ -225,6 +342,9 @@ public class SplashActivity extends BaseActivity {
     }
     
     private void navigateToLogin() {
+        // Detener la animación antes de navegar
+        animationHandler.removeCallbacks(animationRunnable);
+        
         // Falta implementar LoginActivity
         //navigateTo(LoginActivity.class);
         overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_down);
