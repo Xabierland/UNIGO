@@ -11,8 +11,8 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.ImageView;
 
@@ -21,7 +21,6 @@ import androidx.core.view.GestureDetectorCompat;
 
 import com.ehunzango.unigo.R;
 import com.ehunzango.unigo.services.FirebaseAuthService;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Random;
@@ -35,7 +34,10 @@ public class SplashActivity extends BaseActivity {
 
     private static final String TAG = "SplashActivity";
     private CardView centerCircle;
-    private ImageView logo1, logo2, logo3;
+    private ImageView[] logos; // Array para todos los logos
+    private static final int LOGO_TYPES = 3; // Tipos de logos (opendata, ehu, ehunzango)
+    private static final int INSTANCES_PER_LOGO = 3; // Instancias de cada tipo de logo
+    private static final int TOTAL_LOGOS = LOGO_TYPES * INSTANCES_PER_LOGO; // Total de logos
     private ImageView slideUpArrow;
     private View slideUpContainer;
     private GestureDetectorCompat gestureDetector;
@@ -50,8 +52,8 @@ public class SplashActivity extends BaseActivity {
     private Random random = new Random();
     
     // Vectores de velocidad para cada logo
-    private float[] velocityX = new float[3];
-    private float[] velocityY = new float[3];
+    private float[] velocityX;
+    private float[] velocityY;
     
     // Constantes para el movimiento
     private static final float MIN_VELOCITY = 2.5f;
@@ -73,6 +75,13 @@ public class SplashActivity extends BaseActivity {
         // Inicializar servicio de autenticación
         authService = FirebaseAuthService.getInstance();
         
+        // Inicializar arrays para velocidades
+        velocityX = new float[TOTAL_LOGOS];
+        velocityY = new float[TOTAL_LOGOS];
+        
+        // Inicializar array de logos
+        logos = new ImageView[TOTAL_LOGOS];
+        
         // Llamar a initViews después de setContentView para que las vistas ya estén infladas
         initViews();
         
@@ -90,9 +99,6 @@ public class SplashActivity extends BaseActivity {
     @Override
     protected void initViews() {
         centerCircle = findViewById(R.id.centerCircle);
-        logo1 = findViewById(R.id.logo1);
-        logo2 = findViewById(R.id.logo2);
-        logo3 = findViewById(R.id.logo3);
         slideUpArrow = findViewById(R.id.slideUpArrow);
         slideUpContainer = findViewById(R.id.slideUpContainer);
 
@@ -100,38 +106,53 @@ public class SplashActivity extends BaseActivity {
         int logoSize = 96; // tamaño en dp
         int logoSizePx = (int) (logoSize * getResources().getDisplayMetrics().density);
 
-        // Configurar layout para cada logo
-        for (ImageView logo : new ImageView[]{logo1, logo2, logo3}) {
-            if (logo != null) {
-                logo.getLayoutParams().width = logoSizePx;
-                logo.getLayoutParams().height = logoSizePx;
-                logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                logo.requestLayout();
-            }
-        }
-
-        // Por ahora, usamos placeholders
-        logo1.setImageResource(R.drawable.ic_opendata);
-        logo2.setImageResource(R.drawable.ic_ehu);
-        logo3.setImageResource(R.drawable.ic_ehunzango);
+        // Obtener una referencia al ViewGroup raíz
+        ViewGroup rootView = (ViewGroup) findViewById(android.R.id.content);
         
-        // Mostrar logos
-        logo1.setVisibility(View.VISIBLE);
-        logo2.setVisibility(View.VISIBLE);
-        logo3.setVisibility(View.VISIBLE);
+        // Crear las ImageViews para los logos programáticamente
+        for (int i = 0; i < TOTAL_LOGOS; i++) {
+            logos[i] = new ImageView(this);
+            
+            // Configurar layout para cada logo
+            ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(
+                    logoSizePx, logoSizePx);
+            logos[i].setLayoutParams(params);
+            logos[i].setScaleType(ImageView.ScaleType.FIT_CENTER);
+            
+            // Asignar imagen según el tipo de logo (se repiten en grupos de INSTANCES_PER_LOGO)
+            int logoType = i / INSTANCES_PER_LOGO;
+            switch (logoType) {
+                case 0: // Primer tipo (opendata)
+                    logos[i].setImageResource(R.drawable.ic_opendata);
+                    break;
+                case 1: // Segundo tipo (ehu)
+                    logos[i].setImageResource(R.drawable.ic_ehu);
+                    break;
+                case 2: // Tercer tipo (ehunzango)
+                default:
+                    logos[i].setImageResource(R.drawable.ic_ehunzango);
+                    break;
+            }
+            
+            // Hacer visible el logo
+            logos[i].setVisibility(View.VISIBLE);
+            
+            // Añadir el logo al layout
+            rootView.addView(logos[i]);
+        }
         
         // Obtener dimensiones de la pantalla cuando el layout esté listo
-        final View rootView = findViewById(android.R.id.content);
-        rootView.getViewTreeObserver().addOnGlobalLayoutListener(
+        final View rootContentView = findViewById(android.R.id.content);
+        rootContentView.getViewTreeObserver().addOnGlobalLayoutListener(
             new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
                 public void onGlobalLayout() {
                     // Eliminar el listener para que no se llame múltiples veces
-                    rootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    rootContentView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                     
                     // Obtener dimensiones de la pantalla
-                    screenWidth = rootView.getWidth();
-                    screenHeight = rootView.getHeight();
+                    screenWidth = rootContentView.getWidth();
+                    screenHeight = rootContentView.getHeight();
                     
                     // Iniciar animaciones una vez que tenemos las dimensiones
                     initLogoPositions();
@@ -227,7 +248,8 @@ public class SplashActivity extends BaseActivity {
         int centerY = screenHeight / 2;
         int safeRadius = centerCircle.getWidth() / 2 + 50; // Radio de seguridad alrededor del centro
         
-        for (ImageView logo : new ImageView[]{logo1, logo2, logo3}) {
+        for (int i = 0; i < TOTAL_LOGOS; i++) {
+            ImageView logo = logos[i];
             if (logo != null) {
                 float x, y;
                 float distance;
@@ -255,7 +277,7 @@ public class SplashActivity extends BaseActivity {
     
     private void initLogoVelocities() {
         // Iniciar con velocidades aleatorias
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < TOTAL_LOGOS; i++) {
             // Velocidad entre MIN_VELOCITY y MAX_VELOCITY (positiva o negativa)
             velocityX[i] = MIN_VELOCITY + random.nextFloat() * (MAX_VELOCITY - MIN_VELOCITY);
             velocityY[i] = MIN_VELOCITY + random.nextFloat() * (MAX_VELOCITY - MIN_VELOCITY);
@@ -267,13 +289,11 @@ public class SplashActivity extends BaseActivity {
     }
     
     private void startFloatingAnimation() {
-        final ImageView[] logos = {logo1, logo2, logo3};
-        
         animationRunnable = new Runnable() {
             @Override
             public void run() {
                 // Mover cada logo según su velocidad
-                for (int i = 0; i < logos.length; i++) {
+                for (int i = 0; i < TOTAL_LOGOS; i++) {
                     ImageView logo = logos[i];
                     if (logo == null) continue;
                     
