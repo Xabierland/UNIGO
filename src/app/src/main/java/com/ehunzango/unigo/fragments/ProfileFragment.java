@@ -7,7 +7,6 @@ import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,14 +20,13 @@ import com.ehunzango.unigo.activities.MainActivity;
 import com.ehunzango.unigo.models.User;
 import com.ehunzango.unigo.services.FirebaseAuthService;
 import com.ehunzango.unigo.services.FirebaseUserService;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
-
-import de.hdodenhof.circleimageview.CircleImageView;
 
 /**
  * Fragmento para mostrar y gestionar el perfil del usuario.
@@ -41,8 +39,7 @@ public class ProfileFragment extends Fragment {
     // Vistas de visualización
     private TextView userNameTextView;
     private TextView userEmailTextView;
-    private CircleImageView userAvatarImageView;
-    private Button logoutButton;
+    private MaterialButton logoutButton;
 
     // Vistas de edición
     private View editModeContainer;
@@ -86,7 +83,6 @@ public class ProfileFragment extends Fragment {
         // Inicializar vistas de visualización
         userNameTextView = view.findViewById(R.id.user_name_text);
         userEmailTextView = view.findViewById(R.id.user_email_text);
-        userAvatarImageView = view.findViewById(R.id.user_avatar_image);
         logoutButton = view.findViewById(R.id.logout_button);
 
         // Inicializar vistas de edición
@@ -172,7 +168,6 @@ public class ProfileFragment extends Fragment {
         editModeContainer.setVisibility(View.VISIBLE);
         userNameTextView.setVisibility(View.GONE);
         userEmailTextView.setVisibility(View.GONE);
-        logoutButton.setVisibility(View.GONE);
 
         // Configurar campos según tipo de usuario
         if (isAnonymousUser) {
@@ -203,7 +198,6 @@ public class ProfileFragment extends Fragment {
         editModeContainer.setVisibility(View.GONE);
         userNameTextView.setVisibility(View.VISIBLE);
         userEmailTextView.setVisibility(View.VISIBLE);
-        logoutButton.setVisibility(View.VISIBLE);
 
         // Limpiar errores
         nameInputLayout.setError(null);
@@ -337,6 +331,7 @@ public class ProfileFragment extends Fragment {
         passwordEditText.setEnabled(!isLoading && !isGoogleUser && !isAnonymousUser);
         confirmPasswordEditText.setEnabled(!isLoading && !isGoogleUser && !isAnonymousUser);
         fab.setEnabled(!isLoading);
+        logoutButton.setEnabled(!isLoading);
     }
 
     private void showToast(String message) {
