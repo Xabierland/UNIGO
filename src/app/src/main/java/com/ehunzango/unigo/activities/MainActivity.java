@@ -9,6 +9,7 @@ import android.view.MenuItem;
 import androidx.annotation.NonNull;
 
 import com.ehunzango.unigo.R;
+import com.ehunzango.unigo.fragments.ProfileFragment;
 import com.ehunzango.unigo.services.FirebaseAuthService;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -217,10 +218,9 @@ public class MainActivity extends BaseActivity {
         showToast("Mapa - Por implementar");
     }
 
-    private void openProfileFragment()
-    {
+    private void openProfileFragment() {
         actualFragment = FragmentType.PROFILE;
-        showToast("Perfil - Por implementar");
+        replaceFragment(R.id.fragment_container, new ProfileFragment(), "profile", false);
     }
 
     private void openSettingsFragment()
