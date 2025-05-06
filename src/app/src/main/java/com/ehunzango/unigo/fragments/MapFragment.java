@@ -49,6 +49,8 @@ public class MapFragment extends Fragment
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState)
     {
         super.onViewCreated(view, savedInstanceState);
+
+        listener.askLocationPermission();
     }
 
     //              +--------------------------------------------------------------------------+
@@ -70,6 +72,6 @@ public class MapFragment extends Fragment
 
     public interface ListenerFragmentMap
     {
-
+        boolean askLocationPermission();
     }
 }
