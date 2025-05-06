@@ -9,7 +9,9 @@ import android.view.MenuItem;
 import androidx.annotation.NonNull;
 
 import com.ehunzango.unigo.R;
+import com.ehunzango.unigo.fragments.MapFragment;
 import com.ehunzango.unigo.fragments.ProfileFragment;
+import com.ehunzango.unigo.fragments.SettingsFragment;
 import com.ehunzango.unigo.services.FirebaseAuthService;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -215,7 +217,7 @@ public class MainActivity extends BaseActivity {
     private void openMapFragment()
     {
         actualFragment = FragmentType.MAP;
-        showToast("Mapa - Por implementar");
+        replaceFragment(R.id.fragment_container, new MapFragment(), "map", false);
     }
 
     private void openProfileFragment() {
@@ -226,7 +228,7 @@ public class MainActivity extends BaseActivity {
     private void openSettingsFragment()
     {
         actualFragment = FragmentType.SETTINGS;
-        showToast("Ajustes - Por implementar");
+        replaceFragment(R.id.fragment_container, new SettingsFragment(), "settings", false);
     }
 
 
