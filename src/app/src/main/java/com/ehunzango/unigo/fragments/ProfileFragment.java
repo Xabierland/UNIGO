@@ -49,6 +49,7 @@ public class ProfileFragment extends Fragment
     private TextInputEditText passwordEditText;
     private TextInputLayout confirmPasswordInputLayout;
     private TextInputEditText confirmPasswordEditText;
+    private TextView editInfoText;
     private ProgressBar progressBar;
 
     // Botón flotante para editar/guardar
@@ -93,6 +94,7 @@ public class ProfileFragment extends Fragment
         passwordEditText = view.findViewById(R.id.password_edit_text);
         confirmPasswordInputLayout = view.findViewById(R.id.confirm_password_input_layout);
         confirmPasswordEditText = view.findViewById(R.id.confirm_password_edit_text);
+        editInfoText = view.findViewById(R.id.edit_info_text);
         progressBar = view.findViewById(R.id.progress_bar);
 
         // Inicializar FAB
@@ -178,6 +180,7 @@ public class ProfileFragment extends Fragment
             emailInputLayout.setEnabled(false);
             passwordInputLayout.setVisibility(View.GONE);
             confirmPasswordInputLayout.setVisibility(View.GONE);
+            editInfoText.setVisibility(View.GONE);
         } else {
             // Usuario email/contraseña puede editar todo
             emailInputLayout.setEnabled(true);
