@@ -21,7 +21,12 @@ import com.google.android.material.navigation.NavigationBarView;
  * Actividad principal de la aplicación después del inicio de sesión.
  * Gestiona los fragmentos de la interfaz principal.
  */
-public class MainActivity extends BaseActivity {
+public class MainActivity extends       BaseActivity
+
+                          implements    SettingsFragment.ListenerFragmentSettings,
+                                        ProfileFragment.ListenerFragmentProfile,
+                                        MapFragment.ListenerFragmentMap
+{
 
     private BottomNavigationView bottomNav;
     private FirebaseAuthService authService;

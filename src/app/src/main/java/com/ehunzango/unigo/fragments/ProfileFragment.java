@@ -1,5 +1,6 @@
 package com.ehunzango.unigo.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -28,13 +29,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
-/**
- * Fragmento para mostrar y gestionar el perfil del usuario.
- * Contiene la opción de cierre de sesión y edición de datos.
- */
-public class ProfileFragment extends Fragment {
-
+public class ProfileFragment extends Fragment
+{
     private static final String TAG = "ProfileFragment";
+    private ListenerFragmentProfile listener;
 
     // Vistas de visualización
     private TextView userNameTextView;
@@ -338,5 +336,27 @@ public class ProfileFragment extends Fragment {
         if (getContext() != null) {
             Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    //              +--------------------------------------------------------------------------+
+    //              |                                                                          |
+    //              |                        CONEXION CON MAIN ACTIVITY                        |
+    //              |                                                                          |
+    //              +--------------------------------------------------------------------------+
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        try{
+            listener = (ProfileFragment.ListenerFragmentProfile) context;
+        }
+        catch (ClassCastException e){
+            throw new ClassCastException("La clase " +context.toString() + " debe implementar el listener");
+        }
+    }
+
+    public interface ListenerFragmentProfile
+    {
+
     }
 }
