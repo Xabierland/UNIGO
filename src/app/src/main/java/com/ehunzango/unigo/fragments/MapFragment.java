@@ -3,11 +3,16 @@ package com.ehunzango.unigo.fragments;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
@@ -23,7 +28,10 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.HashMap;
@@ -146,12 +154,76 @@ public class MapFragment extends Fragment
                     {
                         obtainActualLocation(true);
                     }
+
+
+                    // Escuela_Ingenieria_Vitoria_Gasteiz
+                    MarkerOptions marker;
+
+                    marker = new MarkerOptions()    .icon(getBitmapFromVectorDrawable(R.drawable.engineering_24px))
+                                                    .position(facultyPositions.get(facultyName.Escuela_Ingenieria_Vitoria_Gasteiz))
+                                                    .title("Escuela_Ingenieria_Vitoria_Gasteiz");
+                    mapGoogle.addMarker(marker);
+
+                    // Facultad_Economia_Empresa
+                     marker = new MarkerOptions()   .icon(getBitmapFromVectorDrawable(R.drawable.savings_24px))
+                                                    .position(facultyPositions.get(facultyName.Facultad_Economia_Empresa))
+                                                    .title("Facultad_Economia_Empresa");
+                    mapGoogle.addMarker(marker);
+
+                    // Facultad_Educacion_Deporte
+                     marker = new MarkerOptions()   .icon(getBitmapFromVectorDrawable(R.drawable.sports_tennis_24px))
+                                                    .position(facultyPositions.get(facultyName.Facultad_Educacion_Deporte))
+                                                    .title("Facultad_Educacion_Deporte");
+                    mapGoogle.addMarker(marker);
+
+                    // Facultad_Farmacia
+                    marker = new MarkerOptions()    .icon(getBitmapFromVectorDrawable(R.drawable.mixture_med_24px))
+                                                    .position(facultyPositions.get(facultyName.Facultad_Farmacia))
+                                                    .title("Facultad_Farmacia");
+                    mapGoogle.addMarker(marker);
+
+                    // Facultad_Letras
+                    marker = new MarkerOptions()    .icon(getBitmapFromVectorDrawable(R.drawable.history_edu_24px))
+                                                    .position(facultyPositions.get(facultyName.Facultad_Letras))
+                                                    .title("Facultad_Letras");
+                    mapGoogle.addMarker(marker);
+
+                    // Facultad_Relaciones_Laborales_Trabajo_Social
+                    marker = new MarkerOptions()    .icon(getBitmapFromVectorDrawable(R.drawable.handshake_24px))
+                                                    .position(facultyPositions.get(facultyName.Facultad_Relaciones_Laborales_Trabajo_Social))
+                                                    .title("Facultad_Relaciones_Laborales_Trabajo_Social");
+                    mapGoogle.addMarker(marker);
+
+                    // Unidad_Docente_Medicina
+                    marker = new MarkerOptions()    .icon(getBitmapFromVectorDrawable(R.drawable.medical_services_24px))
+                                                    .position(facultyPositions.get(facultyName.Unidad_Docente_Medicina))
+                                                    .title("Unidad_Docente_Medicina");
+                    mapGoogle.addMarker(marker);
                 }
             });
         }
     }
 
+    private BitmapDescriptor getBitmapFromVectorDrawable(int drawableId)
+    {
+        Drawable drawable = ContextCompat.getDrawable(requireContext(), drawableId);
 
+        if (drawable == null) {
+            throw new IllegalArgumentException("Drawable not found");
+        }
+
+        drawable.setTint(Color.RED);
+
+        Bitmap bitmap = Bitmap.createBitmap(
+                drawable.getIntrinsicWidth(),
+                drawable.getIntrinsicHeight(),
+                Bitmap.Config.ARGB_8888
+        );
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+        return BitmapDescriptorFactory.fromBitmap(bitmap);
+    }
 
     private void obtainActualLocation(boolean updateMap)
     {
