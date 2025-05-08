@@ -26,6 +26,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.HashMap;
+
 public class MapFragment extends Fragment
 {
 
@@ -35,9 +37,51 @@ public class MapFragment extends Fragment
     private FusedLocationProviderClient locationClient;
     private LatLng userPosition;
 
+    private HashMap<facultyName, LatLng> facultyPositions = new HashMap<>();
+    private enum facultyName
+    {
+        Escuela_Ingenieria_Vitoria_Gasteiz,
+        Facultad_Economia_Empresa,
+        Facultad_Educacion_Deporte,
+        Facultad_Farmacia,
+        Facultad_Letras,
+        Facultad_Relaciones_Laborales_Trabajo_Social,
+        Unidad_Docente_Medicina,
+        Aulas_Experiencia_Alava
+    }
+
+
+
     public MapFragment()
     {
+        facultyPositions = new HashMap<>();
+        facultyPositions.put(
+                facultyName.Escuela_Ingenieria_Vitoria_Gasteiz,
+                new LatLng(42.83921784390094, -2.6744744038759203));
 
+        facultyPositions.put(
+                facultyName.Facultad_Economia_Empresa,
+                new LatLng(42.83758845850613, -2.668680518146171));
+
+        facultyPositions.put(
+                facultyName.Facultad_Educacion_Deporte,
+                new LatLng(42.83933934794871, -2.6744481633876007));
+
+        facultyPositions.put(
+                facultyName.Facultad_Farmacia,
+                new LatLng(42.84064230072461, -2.6718272245113464));
+
+        facultyPositions.put(
+                facultyName.Facultad_Letras,
+                new LatLng(42.8403414326549, -2.670404675504716));
+
+        facultyPositions.put(
+                facultyName.Facultad_Relaciones_Laborales_Trabajo_Social,
+                new LatLng(42.8400093266957, -2.670331999775272));
+
+        facultyPositions.put(
+                facultyName.Unidad_Docente_Medicina,
+                new LatLng(42.8390455018132, -2.670360696479438));
     }
 
     public static MapFragment newInstance(String param1, String param2) {
