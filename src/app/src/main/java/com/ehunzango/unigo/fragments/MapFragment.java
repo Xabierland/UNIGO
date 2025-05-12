@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
@@ -18,6 +19,10 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.ehunzango.unigo.R;
@@ -34,7 +39,10 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 public class MapFragment extends Fragment
 {
@@ -45,8 +53,10 @@ public class MapFragment extends Fragment
     private FusedLocationProviderClient locationClient;
     private LatLng userPosition;
 
-    private HashMap<facultyName, LatLng> facultyPositions = new HashMap<>();
-    private enum facultyName
+    //private List<String> facultyNames;
+    //private HashMap<FacultyIdentifier, LatLng> facultyPositions = new HashMap<>();
+    private HashMap<FacultyIdentifier, FacultyInfo> facultyHashMap = new HashMap<>();
+    private enum FacultyIdentifier
     {
         Escuela_Ingenieria_Vitoria_Gasteiz,
         Facultad_Economia_Empresa,
@@ -57,39 +67,98 @@ public class MapFragment extends Fragment
         Unidad_Docente_Medicina,
         Aulas_Experiencia_Alava
     }
+    private class FacultyInfo
+    {
+        public FacultyIdentifier id;
+        public String name;
+        private MarkerOptions markerOptions;
+        public int iconId;
+        public LatLng position;
+        public Marker marker;
+        public FacultyInfo(FacultyIdentifier id, String name, int iconId, LatLng position)
+        {
+            this.id = id;
+            this.name = name;
+            this.iconId = iconId;
+            this.position = position;
+            this.markerOptions = null;
+
+        }
+
+        public MarkerOptions getMarkerOptions()
+        {
+            if(markerOptions == null)
+            {
+                this.markerOptions = new MarkerOptions()
+                        .icon(getBitmapFromVectorDrawable(iconId, Color.RED))
+                        .position(position)
+                        .title(name);
+            }
+
+            return markerOptions;
+        }
+
+
+    }
+    private List<FacultyInfo> dropDownOrder;
 
 
 
     public MapFragment()
     {
-        facultyPositions = new HashMap<>();
-        facultyPositions.put(
-                facultyName.Escuela_Ingenieria_Vitoria_Gasteiz,
+        // TODO: Cambiar los nombres por identificadores de idioma
+        facultyHashMap = new HashMap<>();
+        FacultyInfo info = null;
+
+        info = new FacultyInfo(
+                FacultyIdentifier.Escuela_Ingenieria_Vitoria_Gasteiz,
+                "Escuela de Ingeniería de Vitoria-Gasteiz",
+                R.drawable.engineering_24px,
                 new LatLng(42.83921784390094, -2.6744744038759203));
+        facultyHashMap.put(info.id, info);
 
-        facultyPositions.put(
-                facultyName.Facultad_Economia_Empresa,
+
+        info = new FacultyInfo(
+                FacultyIdentifier.Facultad_Economia_Empresa,
+                "Facultad de Economía y Empresa",
+                R.drawable.savings_24px,
                 new LatLng(42.83758845850613, -2.668680518146171));
+        facultyHashMap.put(info.id, info);
 
-        facultyPositions.put(
-                facultyName.Facultad_Educacion_Deporte,
+        info = new FacultyInfo(
+                FacultyIdentifier.Facultad_Educacion_Deporte,
+                "Facultad de Educación y Deporte",
+                R.drawable.sports_tennis_24px,
                 new LatLng(42.83933934794871, -2.6744481633876007));
+        facultyHashMap.put(info.id, info);
 
-        facultyPositions.put(
-                facultyName.Facultad_Farmacia,
+        info = new FacultyInfo(
+                FacultyIdentifier.Facultad_Farmacia,
+                "Facultad de Farmacia",
+                R.drawable.mixture_med_24px,
                 new LatLng(42.84064230072461, -2.6718272245113464));
+        facultyHashMap.put(info.id, info);
 
-        facultyPositions.put(
-                facultyName.Facultad_Letras,
+        info = new FacultyInfo(
+                FacultyIdentifier.Facultad_Letras,
+                "Facultad de Letras",
+                R.drawable.history_edu_24px,
                 new LatLng(42.8403414326549, -2.670404675504716));
+        facultyHashMap.put(info.id, info);
 
-        facultyPositions.put(
-                facultyName.Facultad_Relaciones_Laborales_Trabajo_Social,
+        info = new FacultyInfo(
+                FacultyIdentifier.Facultad_Relaciones_Laborales_Trabajo_Social,
+                "Facultad de Relaciones Laborales y Trabajo Social",
+                R.drawable.handshake_24px,
                 new LatLng(42.8400093266957, -2.670331999775272));
+        facultyHashMap.put(info.id, info);
 
-        facultyPositions.put(
-                facultyName.Unidad_Docente_Medicina,
+        info = new FacultyInfo(
+                FacultyIdentifier.Unidad_Docente_Medicina,
+                "Unidad Docente de Medicina",
+                R.drawable.medical_services_24px,
                 new LatLng(42.8390455018132, -2.670360696479438));
+        facultyHashMap.put(info.id, info);
     }
 
     public static MapFragment newInstance(String param1, String param2) {
@@ -131,7 +200,7 @@ public class MapFragment extends Fragment
         obtainActualLocation(false);
 
         // Obtener el fragmento del mapa e inicializarlo
-        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_fragment);
+        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.google_map_fragment);
 
         if (mapFragment != null)
         {
@@ -155,56 +224,120 @@ public class MapFragment extends Fragment
                         obtainActualLocation(true);
                     }
 
+                    Collection<FacultyInfo> faculties = facultyHashMap.values();
+                    for (FacultyInfo faculty : faculties)
+                    {
+                        Marker m = mapGoogle.addMarker(faculty.getMarkerOptions());
+                        faculty.marker = m;
 
-                    // Escuela_Ingenieria_Vitoria_Gasteiz
-                    MarkerOptions marker;
-
-                    marker = new MarkerOptions()    .icon(getBitmapFromVectorDrawable(R.drawable.engineering_24px))
-                                                    .position(facultyPositions.get(facultyName.Escuela_Ingenieria_Vitoria_Gasteiz))
-                                                    .title("Escuela_Ingenieria_Vitoria_Gasteiz");
-                    mapGoogle.addMarker(marker);
-
-                    // Facultad_Economia_Empresa
-                     marker = new MarkerOptions()   .icon(getBitmapFromVectorDrawable(R.drawable.savings_24px))
-                                                    .position(facultyPositions.get(facultyName.Facultad_Economia_Empresa))
-                                                    .title("Facultad_Economia_Empresa");
-                    mapGoogle.addMarker(marker);
-
-                    // Facultad_Educacion_Deporte
-                     marker = new MarkerOptions()   .icon(getBitmapFromVectorDrawable(R.drawable.sports_tennis_24px))
-                                                    .position(facultyPositions.get(facultyName.Facultad_Educacion_Deporte))
-                                                    .title("Facultad_Educacion_Deporte");
-                    mapGoogle.addMarker(marker);
-
-                    // Facultad_Farmacia
-                    marker = new MarkerOptions()    .icon(getBitmapFromVectorDrawable(R.drawable.mixture_med_24px))
-                                                    .position(facultyPositions.get(facultyName.Facultad_Farmacia))
-                                                    .title("Facultad_Farmacia");
-                    mapGoogle.addMarker(marker);
-
-                    // Facultad_Letras
-                    marker = new MarkerOptions()    .icon(getBitmapFromVectorDrawable(R.drawable.history_edu_24px))
-                                                    .position(facultyPositions.get(facultyName.Facultad_Letras))
-                                                    .title("Facultad_Letras");
-                    mapGoogle.addMarker(marker);
-
-                    // Facultad_Relaciones_Laborales_Trabajo_Social
-                    marker = new MarkerOptions()    .icon(getBitmapFromVectorDrawable(R.drawable.handshake_24px))
-                                                    .position(facultyPositions.get(facultyName.Facultad_Relaciones_Laborales_Trabajo_Social))
-                                                    .title("Facultad_Relaciones_Laborales_Trabajo_Social");
-                    mapGoogle.addMarker(marker);
-
-                    // Unidad_Docente_Medicina
-                    marker = new MarkerOptions()    .icon(getBitmapFromVectorDrawable(R.drawable.medical_services_24px))
-                                                    .position(facultyPositions.get(facultyName.Unidad_Docente_Medicina))
-                                                    .title("Unidad_Docente_Medicina");
-                    mapGoogle.addMarker(marker);
+                    }
                 }
             });
         }
+
+        // DROPDOWN MENU
+        setUpDropDownMenu(view);
+
     }
 
-    private BitmapDescriptor getBitmapFromVectorDrawable(int drawableId)
+    private void setUpDropDownMenu(View view)
+    {
+        Spinner dropDownMenu = view.findViewById(R.id.spinner_destinos);
+
+        List<String> items = new ArrayList<>();
+        items.add("Selecciona un destino"); //TODO: Poner idioma
+        dropDownOrder = new ArrayList<>();
+        Collection<FacultyInfo> faculties = facultyHashMap.values();
+        for (FacultyInfo faculty : faculties)
+        {
+            items.add(faculty.name);
+            dropDownOrder.add(faculty);
+        }
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                                                            requireContext(),
+                                                            android.R.layout.simple_spinner_item,
+                                                            items
+                                                         )
+        {
+            @Override
+            public boolean isEnabled(int position)
+            {
+                return position != 0; // Desactiva la opcion : Selecciona un destino
+            }
+
+            @Override
+            public View getDropDownView(int position, View convertView, ViewGroup parent)
+            {
+                View view = super.getDropDownView(position, convertView, parent);
+                TextView textView = (TextView) view;
+                if (position == 0)
+                {
+                    textView.setTextColor(Color.GRAY);
+                    textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
+                }
+                else
+                {
+                    textView.setTextColor(Color.WHITE);
+                }
+                return view;
+            }
+        };
+
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        dropDownMenu.setAdapter(adapter);
+
+        dropDownMenu.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+        {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+            {
+                if (position == 0)
+                {
+                    return;
+                }
+                position = position-1;
+
+                //Toast.makeText(getContext(), facultyNames.get(position), Toast.LENGTH_SHORT).show();
+                FacultyInfo info = dropDownOrder.get(position);
+                selectFaculty(info.id);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent)
+            {
+
+            }
+        });
+    }
+
+    private void selectFaculty(FacultyIdentifier id)
+    {
+        FacultyInfo faculty = facultyHashMap.get(id);
+        if(faculty == null)
+        {
+            return;
+        }
+
+        Collection<FacultyInfo> faculties = facultyHashMap.values();
+        for (FacultyInfo f : faculties)
+        {
+            if(f.marker != null)
+            {
+                f.marker.setIcon(getBitmapFromVectorDrawable(f.iconId, Color.GRAY));
+            }
+        }
+
+        //Toast.makeText(getContext(), faculty.name, Toast.LENGTH_SHORT).show();
+        if(faculty.marker != null)
+        {
+            faculty.marker.setIcon(getBitmapFromVectorDrawable(faculty.iconId, Color.RED));
+        }
+        //mapGoogle.moveCamera(CameraUpdateFactory.newLatLngZoom(faculty.position, 17f));
+        mapGoogle.animateCamera(CameraUpdateFactory.newLatLngZoom(faculty.position, 17f), 500, null);
+    }
+
+    private BitmapDescriptor getBitmapFromVectorDrawable(int drawableId, int color)
     {
         Drawable drawable = ContextCompat.getDrawable(requireContext(), drawableId);
 
@@ -212,7 +345,7 @@ public class MapFragment extends Fragment
             throw new IllegalArgumentException("Drawable not found");
         }
 
-        drawable.setTint(Color.RED);
+        drawable.setTint(color);
 
         Bitmap bitmap = Bitmap.createBitmap(
                 drawable.getIntrinsicWidth(),
