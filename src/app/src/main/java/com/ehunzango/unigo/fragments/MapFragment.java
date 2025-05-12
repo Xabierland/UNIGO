@@ -16,11 +16,14 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import android.provider.ContactsContract;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -43,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.PrimitiveIterator;
 
 public class MapFragment extends Fragment
 {
@@ -102,6 +106,16 @@ public class MapFragment extends Fragment
     }
     private List<FacultyInfo> dropDownOrder;
 
+    private enum TransportType
+    {
+        WALK,
+        BIKE,
+        BUS
+    }
+    private HashMap<TransportType, ImageView> transportImageHashMap = new HashMap<>();
+
+    private FacultyIdentifier selectedFaculty;
+    private TransportType selectedTransport;
 
 
     public MapFragment()
@@ -216,8 +230,8 @@ public class MapFragment extends Fragment
                     //mapGoogle.addMarker(new MarkerOptions().position(bogota).title("Marker en Bogotá"));
                     if(userPosition != null)
                     {
-                        mapGoogle.addMarker(new MarkerOptions().position(userPosition).title("OWO"));
-                        mapGoogle.moveCamera(CameraUpdateFactory.newLatLngZoom(userPosition, 12f));
+                        mapGoogle.addMarker(new MarkerOptions().position(userPosition).icon(getBitmapFromVectorDrawable(R.drawable.location_on_24px, Color.RED)));
+                        mapGoogle.animateCamera(CameraUpdateFactory.newLatLngZoom(userPosition, 12f), 1000, null);
                     }
                     else
                     {
@@ -238,7 +252,10 @@ public class MapFragment extends Fragment
         // DROPDOWN MENU
         setUpDropDownMenu(view);
 
+        // TRANSPORT TYPE IMAGE BUTTONS
+        setUpTansportButtons(view);
     }
+
 
     private void setUpDropDownMenu(View view)
     {
@@ -275,10 +292,6 @@ public class MapFragment extends Fragment
                 {
                     textView.setTextColor(Color.GRAY);
                     textView.setTypeface(textView.getTypeface(), Typeface.BOLD);
-                }
-                else
-                {
-                    textView.setTextColor(Color.WHITE);
                 }
                 return view;
             }
@@ -319,6 +332,8 @@ public class MapFragment extends Fragment
             return;
         }
 
+        selectedFaculty = id;
+
         Collection<FacultyInfo> faculties = facultyHashMap.values();
         for (FacultyInfo f : faculties)
         {
@@ -358,6 +373,62 @@ public class MapFragment extends Fragment
         return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
 
+
+    private void setUpTansportButtons(View view)
+    {
+        Button buttonWalk = view.findViewById(R.id.button_background_walk);
+        Button buttonBike = view.findViewById(R.id.button_background_bike);
+        Button buttonBus = view.findViewById(R.id.button_background_bus);
+
+        buttonWalk.setOnClickListener(v -> transportSelected(TransportType.WALK));
+        buttonBike.setOnClickListener(v -> transportSelected(TransportType.BIKE));
+        buttonBus.setOnClickListener(v -> transportSelected(TransportType.BUS));
+
+        transportImageHashMap = new HashMap<>();
+
+        ImageView imageViewWalk = view.findViewById(R.id.image_walking_symbol);
+        ImageView imageViewBike = view.findViewById(R.id.image_bike_symbol);
+        ImageView imageViewBus = view.findViewById(R.id.image_bus_symbol);
+
+        transportImageHashMap.put(TransportType.WALK, imageViewWalk);
+        transportImageHashMap.put(TransportType.BIKE, imageViewBike);
+        transportImageHashMap.put(TransportType.BUS, imageViewBus);
+
+        Collection<ImageView> images = transportImageHashMap.values();
+        for (ImageView image : images)
+        {
+            image.setColorFilter(Color.GRAY);
+        }
+    }
+
+    private void transportSelected(TransportType type)
+    {
+        Collection<ImageView> images = transportImageHashMap.values();
+        for (ImageView image : images)
+        {
+            image.setColorFilter(Color.GRAY);
+        }
+
+        transportImageHashMap.get(type).setColorFilter(Color.RED);
+        selectedTransport = type;
+
+        switch (type)
+        {
+            default:
+            case WALK: //Caminar
+                //Toast.makeText(getContext(), "Caminar", Toast.LENGTH_SHORT).show();
+                break;
+
+            case BIKE: // Bici
+                //Toast.makeText(getContext(), "Bici", Toast.LENGTH_SHORT).show();
+                break;
+
+            case BUS: // Bus
+                //Toast.makeText(getContext(), "Bus", Toast.LENGTH_SHORT).show();
+                break;
+        }
+    }
+
     private void obtainActualLocation(boolean updateMap)
     {
         if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -380,8 +451,8 @@ public class MapFragment extends Fragment
 
                                 if(updateMap)
                                 {
-                                    mapGoogle.addMarker(new MarkerOptions().position(userPosition).title("OWO"));
-                                    mapGoogle.moveCamera(CameraUpdateFactory.newLatLngZoom(userPosition, 12f));
+                                    mapGoogle.addMarker(new MarkerOptions().position(userPosition).icon(getBitmapFromVectorDrawable(R.drawable.location_on_24px, Color.RED)));
+                                    mapGoogle.animateCamera(CameraUpdateFactory.newLatLngZoom(userPosition, 12f), 1000, null);
                                 }
                             }
 
@@ -390,7 +461,7 @@ public class MapFragment extends Fragment
 
 
     //              +--------------------------------------------------------------------------+
-    //              |                                                                          |
+    //              |                                                                             |
     //              |                        CONEXION CON MAIN ACTIVITY                        |
     //              |                                                                          |
     //              +--------------------------------------------------------------------------+
