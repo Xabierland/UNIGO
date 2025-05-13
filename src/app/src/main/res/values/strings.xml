@@ -59,6 +59,22 @@
     <string name="logout_title">Cerrar sesión</string>
     <string name="logout_message">¿Estás seguro de que quieres cerrar sesión?</string>
     <string name="anonymous_user">Usuario anónimo</string>
+
+    <!-- Configuración -->
+    <string name="settings_title">Ajustes</string>
+    <string name="theme_dialog_title">Tema de la aplicación</string>
+    <string name="theme_summary">Elige el tema para la aplicación</string>
+    <string name="theme_title">Elige una configuración de tema</string>
+    <string name="lang_dialog_title">Idioma de la aplicación</string>
+    <string name="lang_summary">Elige el idioma para la aplicación</string>
+    <string name="lang_title">Elige una configuración de idioma</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="theme_system">Modo del sistema</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_eu">Euskera</string>
+    <string name="lang_en">Inglés</string>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

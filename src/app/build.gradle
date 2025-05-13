@@ -68,6 +68,11 @@ dependencies {
     // CircleImageView
     implementation 'de.hdodenhof:circleimageview:3.1.0'
 
+
+    // Preferences
+    implementation 'androidx.preference:preference:1.2.0'
+
     // Google maps
     implementation 'com.google.android.gms:play-services-maps:18.2.0'
+
 }
