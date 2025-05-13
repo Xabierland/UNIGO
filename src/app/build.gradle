@@ -17,6 +17,21 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Cargar propiedades desde local.properties
+        Properties properties = new Properties()
+        properties.load(project.rootProject.file('local.properties').newInputStream())
+        
+        // Configurar BuildConfig con la API key
+        buildConfigField "String", "MAPS_API_KEY", "\"${properties.getProperty('MAPS_API_KEY', "")}\""
+        
+        // Configurar manifestPlaceholders para usarlo en el AndroidManifest.xml
+        manifestPlaceholders = [MAPS_API_KEY: properties.getProperty('MAPS_API_KEY', "")]
+    }
+
+    // Habilitar la generación de BuildConfig
+    buildFeatures {
+        buildConfig true
     }
 
     buildTypes {
@@ -32,11 +47,11 @@ android {
 }
 
 dependencies {
-
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity
     implementation libs.constraintlayout
+    implementation libs.play.services.location
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
@@ -53,6 +68,11 @@ dependencies {
     // CircleImageView
     implementation 'de.hdodenhof:circleimageview:3.1.0'
 
+
     // Preferences
     implementation 'androidx.preference:preference:1.2.0'
+
+    // Google maps
+    implementation 'com.google.android.gms:play-services-maps:18.2.0'
+
 }

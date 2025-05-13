@@ -1,12 +1,29 @@
 package com.ehunzango.unigo.activities;
 
+import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.icu.text.SimpleDateFormat;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.provider.Settings;
 import android.view.MenuItem;
+import android.widget.LinearLayout;
+import android.widget.Toast;
 
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
+import androidx.fragment.app.DialogFragment;
 
 import com.ehunzango.unigo.R;
 import com.ehunzango.unigo.fragments.MapFragment;
@@ -16,6 +33,10 @@ import com.ehunzango.unigo.services.FirebaseAuthService;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationBarView;
+
+import java.io.File;
+import java.util.Date;
+import java.util.Locale;
 
 /**
  * Actividad principal de la aplicación después del inicio de sesión.
@@ -73,7 +94,18 @@ public class MainActivity extends       BaseActivity
         {
             actualFragment = FragmentType.values()[savedInstanceState.getInt("actualFragment")];
         }
-        
+
+        //              +--------------------------------------------------------+
+        //              |                       PERMISOS                         |
+        //              +                                                        +
+
+        checkLocationPermission();
+
+        //              +                                                        +
+        //              |                       PERMISOS                         |
+        //              +--------------------------------------------------------+
+
+
         // Configurar navegación
         setupNavigation();
 
@@ -154,6 +186,64 @@ public class MainActivity extends       BaseActivity
                 openMapFragment();
                 break;
         }
+    }
+
+    private boolean checkLocationPermission()
+    {
+        // Si el permiso está concedido
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+        {
+            // Nada
+            //Toast.makeText(this, "Permiso concedido", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        // Si ya se ha solicitado el permiso anteriormente, pero el usuario lo ha rechazado
+        else if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.ACCESS_FINE_LOCATION))
+        {
+
+            Toast.makeText(this, "Solicitando permiso otra vez", Toast.LENGTH_SHORT).show();
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("Se requieren permisos de ubicación para poder usar el mapa"); //TODO: Idiomas
+
+            LinearLayout layoutName = new LinearLayout(getBaseContext());
+            layoutName.setOrientation(LinearLayout.VERTICAL);
+
+            builder.setView(layoutName);
+
+            builder.setPositiveButton("Abrir ajustes", new DialogInterface.OnClickListener()
+            {
+                @Override
+                public void onClick(DialogInterface dialog, int which)
+                {
+                    dialog.dismiss();
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    Uri uri = Uri.fromParts("package", getPackageName(), null);
+                    intent.setData(uri);
+                    startActivity(intent);
+                }
+            });
+
+            builder.setNegativeButton("Cancelar", new DialogInterface.OnClickListener()
+            {
+                @Override
+                public void onClick(DialogInterface dialog, int which)
+                {
+                    dialog.dismiss();
+                }
+            });
+
+
+            builder.show();
+        }
+
+        // Solicitar permiso
+        else
+        {
+            Toast.makeText(this, "Solicitando permiso", Toast.LENGTH_SHORT).show();
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 31);
+        }
+
+        return false;
     }
 
 
@@ -252,6 +342,11 @@ public class MainActivity extends       BaseActivity
 
     // ----- LISTENER MAP
 
+    @Override
+    public boolean askLocationPermission()
+    {
+        return checkLocationPermission();
+    }
 
     // ----- LISTENER PROFILE
 
