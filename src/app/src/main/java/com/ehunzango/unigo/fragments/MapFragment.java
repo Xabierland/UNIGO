@@ -16,20 +16,19 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import android.provider.ContactsContract;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.ehunzango.unigo.R;
 
+import com.ehunzango.unigo.adapters.ImageSpinnerAdapter;
+import com.ehunzango.unigo.adapters.SpinnerImageItem;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -41,12 +40,13 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.PrimitiveIterator;
 
 public class MapFragment extends Fragment
 {
@@ -57,8 +57,6 @@ public class MapFragment extends Fragment
     private FusedLocationProviderClient locationClient;
     private LatLng userPosition;
 
-    //private List<String> facultyNames;
-    //private HashMap<FacultyIdentifier, LatLng> facultyPositions = new HashMap<>();
     private HashMap<FacultyIdentifier, FacultyInfo> facultyHashMap = new HashMap<>();
     private enum FacultyIdentifier
     {
@@ -110,10 +108,11 @@ public class MapFragment extends Fragment
     {
         WALK,
         BIKE,
-        BUS
+        BUS,
+        CAR
     }
-    private HashMap<TransportType, ImageView> transportImageHashMap = new HashMap<>();
 
+    // Selection
     private FacultyIdentifier selectedFaculty;
     private TransportType selectedTransport;
 
@@ -239,12 +238,15 @@ public class MapFragment extends Fragment
                     }
 
                     Collection<FacultyInfo> faculties = facultyHashMap.values();
+
                     for (FacultyInfo faculty : faculties)
                     {
                         Marker m = mapGoogle.addMarker(faculty.getMarkerOptions());
                         faculty.marker = m;
-
                     }
+
+
+                    routeExample();
                 }
             });
         }
@@ -253,7 +255,7 @@ public class MapFragment extends Fragment
         setUpDropDownMenu(view);
 
         // TRANSPORT TYPE IMAGE BUTTONS
-        setUpTansportButtons(view);
+        setUpTansportDropdown(view);
     }
 
 
@@ -314,6 +316,7 @@ public class MapFragment extends Fragment
                 //Toast.makeText(getContext(), facultyNames.get(position), Toast.LENGTH_SHORT).show();
                 FacultyInfo info = dropDownOrder.get(position);
                 selectFaculty(info.id);
+                selectionRealizated();
             }
 
             @Override
@@ -350,6 +353,8 @@ public class MapFragment extends Fragment
         }
         //mapGoogle.moveCamera(CameraUpdateFactory.newLatLngZoom(faculty.position, 17f));
         mapGoogle.animateCamera(CameraUpdateFactory.newLatLngZoom(faculty.position, 17f), 500, null);
+
+
     }
 
     private BitmapDescriptor getBitmapFromVectorDrawable(int drawableId, int color)
@@ -374,42 +379,40 @@ public class MapFragment extends Fragment
     }
 
 
-    private void setUpTansportButtons(View view)
+    private void setUpTansportDropdown(View view)
     {
-        Button buttonWalk = view.findViewById(R.id.button_background_walk);
-        Button buttonBike = view.findViewById(R.id.button_background_bike);
-        Button buttonBus = view.findViewById(R.id.button_background_bus);
+        Spinner dropDownTransportes = view.findViewById(R.id.spinner_transportes);
 
-        buttonWalk.setOnClickListener(v -> transportSelected(TransportType.WALK));
-        buttonBike.setOnClickListener(v -> transportSelected(TransportType.BIKE));
-        buttonBus.setOnClickListener(v -> transportSelected(TransportType.BUS));
+        // Crear la lista de ítems para el spinner (con imagen + texto)
+        List<SpinnerImageItem> items = new ArrayList<>();
 
-        transportImageHashMap = new HashMap<>();
-
-        ImageView imageViewWalk = view.findViewById(R.id.image_walking_symbol);
-        ImageView imageViewBike = view.findViewById(R.id.image_bike_symbol);
-        ImageView imageViewBus = view.findViewById(R.id.image_bus_symbol);
-
-        transportImageHashMap.put(TransportType.WALK, imageViewWalk);
-        transportImageHashMap.put(TransportType.BIKE, imageViewBike);
-        transportImageHashMap.put(TransportType.BUS, imageViewBus);
-
-        Collection<ImageView> images = transportImageHashMap.values();
-        for (ImageView image : images)
+        for (TransportType type : TransportType.values())
         {
-            image.setColorFilter(Color.GRAY);
+            items.add(new SpinnerImageItem(getTransportIcon(type)));
         }
+
+        ImageSpinnerAdapter adapter = new ImageSpinnerAdapter(requireContext(), items);
+
+        dropDownTransportes.setAdapter(adapter);
+
+        // Listener del Spinner
+        dropDownTransportes.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+        {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+            {
+                TransportType type = TransportType.values()[position];
+                transportSelected(type);
+                selectionRealizated();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) { }
+        });
     }
 
     private void transportSelected(TransportType type)
     {
-        Collection<ImageView> images = transportImageHashMap.values();
-        for (ImageView image : images)
-        {
-            image.setColorFilter(Color.GRAY);
-        }
-
-        transportImageHashMap.get(type).setColorFilter(Color.RED);
         selectedTransport = type;
 
         switch (type)
@@ -426,8 +429,20 @@ public class MapFragment extends Fragment
             case BUS: // Bus
                 //Toast.makeText(getContext(), "Bus", Toast.LENGTH_SHORT).show();
                 break;
+            case CAR:
+                break;
         }
     }
+
+
+    private void selectionRealizated()
+    {
+        if(selectedFaculty == null || selectedTransport == null)
+        {
+            return;
+        }
+    }
+
 
     private void obtainActualLocation(boolean updateMap)
     {
@@ -461,7 +476,91 @@ public class MapFragment extends Fragment
 
 
     //              +--------------------------------------------------------------------------+
-    //              |                                                                             |
+    //              |                                                                          |
+    //              |                              DIBUJO DE RUTA                              |
+    //              |                                                                          |
+    //              +--------------------------------------------------------------------------+
+
+    private void routeExample()
+    {
+        LatLng inicio = new LatLng(43.1920, -3.1375);
+        LatLng parada = new LatLng(43.1840, -3.1000);
+        LatLng fin = new LatLng(43.1800, -3.0700);
+
+        ArrayList<LatLng> rutaZallaGuenes = new ArrayList<>();
+        rutaZallaGuenes.add(inicio); // Zalla centro
+        rutaZallaGuenes.add(new LatLng(43.1890, -3.1295));
+        rutaZallaGuenes.add(new LatLng(43.1872, -3.1212));
+        rutaZallaGuenes.add(new LatLng(43.1855, -3.1100));
+        rutaZallaGuenes.add(parada); // Güeñes centro
+
+        ArrayList<LatLng> rutaGuenesSodupe = new ArrayList<>();
+        rutaGuenesSodupe.add(parada); // Güeñes centro
+        rutaGuenesSodupe.add(new LatLng(43.1830, -3.0920));
+        rutaGuenesSodupe.add(new LatLng(43.1820, -3.0850));
+        rutaGuenesSodupe.add(new LatLng(43.1810, -3.0775));
+        rutaGuenesSodupe.add(fin); // Sodupe centro
+
+        Polyline line1 = drawRoute(rutaZallaGuenes, Color.RED);
+        Polyline line2 = drawRoute(rutaGuenesSodupe, Color.BLUE);
+        drawVehicle(inicio, TransportType.WALK, Color.GREEN);
+        drawVehicle(parada, TransportType.BIKE, Color.GREEN);
+    }
+
+
+    private Polyline drawRoute(ArrayList<LatLng> route, int color)
+    {
+        LatLng initialPoint = route.get(0);
+
+        PolylineOptions lineOptions = new PolylineOptions()
+                .add(initialPoint)
+                .color(color)
+                .width(8f);
+
+        // Tambien existe la alternativa de hacer addAll directamente
+        for (int i = 1; i < route.size(); i++)
+        {
+            LatLng newPoint = route.get(i);
+            lineOptions.add(newPoint);
+        }
+
+        Polyline line = mapGoogle.addPolyline(lineOptions);
+        return line;
+    }
+
+    private Marker drawVehicle(LatLng point, TransportType type, int color)
+    {
+        MarkerOptions markerOptions = new MarkerOptions()
+                .icon(getBitmapFromVectorDrawable(getTransportIcon(type), color))
+                .position(point);
+
+        return mapGoogle.addMarker(markerOptions);
+    }
+
+    private int getTransportIcon(TransportType type)
+    {
+        switch (type)
+        {
+            default:
+            case WALK:
+                return R.drawable.directions_walk_24px;
+
+            case BIKE:
+            return R.drawable.pedal_bike_24px;
+
+            case BUS:
+                return R.drawable.directions_bus_24px;
+
+            case CAR:
+                return R.drawable.directions_car_24px;
+        }
+    }
+
+
+
+
+    //              +--------------------------------------------------------------------------+
+    //              |                                                                          |
     //              |                        CONEXION CON MAIN ACTIVITY                        |
     //              |                                                                          |
     //              +--------------------------------------------------------------------------+
