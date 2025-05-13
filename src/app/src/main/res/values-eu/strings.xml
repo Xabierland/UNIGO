@@ -1,0 +1,80 @@
+<resources>
+    <!-- Cadenas de texto de la aplicacion base -->
+    <string name="app_name">UNIGO</string>
+    <!-- Cadenas de texto de la pantalla de carga -->
+    <string name="swipe_up_description">Gorantz egin aurrera jarraitzeko</string>
+    <string name="logo_description">Erakundearen logoa</string>
+
+    <!-- Cadenas de texto de la pantalla de inicio de sesión -->
+    <string name="login_title">Sartu UNIGOra</string>
+    <string name="login_tab">Saioa hasi</string>
+    <string name="register_tab">Izena eman</string>
+    <string name="email_hint">Posta elektronikoa</string>
+    <string name="password_hint">Pasahitza</string>
+    <string name="name_hint">Izen-abizenak</string>
+    <string name="confirm_password_hint">Pasahitza baieztatu</string>
+    <string name="login_button">Saioa hasi</string>
+    <string name="register_button">Izena eman</string>
+    <string name="forgot_password">Pasahitza ahaztu duzu?</string>
+    <string name="or_text">ala jarraitu</string>
+    <string name="google_sign_in">Jarraitu Google-ekin</string>
+    <string name="phone_sign_in">Jarraitu telefonoarekin</string>
+    <string name="anonymous_sign_in">Jarraitu konturik gabe</string>
+
+    <!-- Verificación por teléfono -->
+    <string name="phone_verification_title">Telefonoz egiaztatzea</string>
+    <string name="phone_verification_subtitle">Egiaztapen-kode bat bidaliko dizugu SMS bidez</string>
+    <string name="phone_hint">Telefono zenbakia (+34 123456789)</string>
+    <string name="send_code_button">Kodea bidali</string>
+    <string name="verification_code_hint">Egiaztapen-kodea</string>
+    <string name="code_sent_message">Kode bat bidali da zure telefonora</string>
+    <string name="resend_code_button">Birbidali</string>
+    <string name="verify_code_button">Egiaztatu</string>
+
+    <!-- Mensajes de error -->
+    <string name="error_invalid_email">Posta elektronikoa ez da baliozkoa</string>
+    <string name="error_invalid_password">Pasahitzak gutxienez 6 karaktere izan behar ditu</string>
+    <string name="error_passwords_not_match">Pasahitzak ez datoz bat</string>
+    <string name="error_empty_name">Izena ezin da hutsik egon</string>
+    <string name="error_invalid_phone">Telefono zenbakia ez da baliozkoa</string>
+    <string name="error_empty_code">Egiaztapen-kodea ezin da hutsik egon</string>
+
+    <!-- Mensajes de éxito -->
+    <string name="success_login">Arrakasta saioa hastean</string>
+    <string name="success_register">Arrakasta izena ematean</string>
+    <string name="success_verification">Arrakasta egiaztapenean</string>
+    <string name="success_reset_password">Zure pasahitza berrezartzeko mezu elektroniko bat bidali da</string>
+
+    <!-- Diálogos -->
+    <string name="dialog_reset_password_title">Pasahitza berrezarri</string>
+    <string name="dialog_reset_password_message">Sartu zure helbide elektronikoa pasahitza berrezartzeko jarraibideak jasotzeko</string>
+    <string name="dialog_button_send">Bidali</string>
+    <string name="dialog_button_cancel">Ezeztatu</string>
+
+    <!-- Navegación principal -->
+    <string name="nav_map">Mapa</string>
+    <string name="nav_profile">Profila</string>
+    <string name="nav_settings">Ezarpenak</string>
+    <string name="action_logout">Saioa itxi</string>
+    <string name="logout_title">Saioa itxi</string>
+    <string name="logout_message">Ziur zaude saioa itxi nahi duzula?</string>
+    <string name="anonymous_user">Erabiltzaile anonimoa</string>
+
+    <!-- Configuración -->
+    <string name="settings_title">Ezarpenak</string>
+    <string name="theme_dialog_title">Aplikazioaren gaia</string>
+    <string name="theme_summary">Aukeratu aplikazioaren gaia</string>
+    <string name="theme_title">Aukeratu gaiaren konfigurazio bat</string>
+    <string name="lang_dialog_title">Aplikazioaren hizkuntza</string>
+    <string name="lang_summary">Aukeratu aplikazioaren hizkuntza</string>
+    <string name="lang_title">Aukeratu hizkuntzaren konfigurazio bat</string>
+    <string name="theme_light">Argia</string>
+    <string name="theme_dark">Iluna</string>
+    <string name="theme_system">Sistemaren modua</string>
+    <string name="lang_es">Gaztelania</string>
+    <string name="lang_eu">Euskara</string>
+    <string name="lang_en">Ingelesa</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
