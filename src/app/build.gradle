@@ -70,4 +70,7 @@ dependencies {
 
     // Google maps
     implementation 'com.google.android.gms:play-services-maps:18.2.0'
+
+    // CSV
+    implementation 'com.opencsv:opencsv:5.8'
 }
