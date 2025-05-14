@@ -77,4 +77,12 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="engineer_school">Vitoria-Gasteiz Engineering School</string>
+    <string name="economy_school">Faculty of Economics and Business</string>
+    <string name="sports_school">Faculty of Education and Sports</string>
+    <string name="pharmacy_school">"Faculty of Pharmacy "</string>
+    <string name="letter_school">Faculty of Letters</string>
+    <string name="relations_school">Faculty of Labor Relations and Social Work</string>
+    <string name="medicine_school">Teaching Unit of Medicine</string>
+    <string name="select_faculty">Select a destination</string>
 </resources>

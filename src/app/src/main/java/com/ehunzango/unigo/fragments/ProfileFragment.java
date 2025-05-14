@@ -18,14 +18,12 @@ import androidx.fragment.app.Fragment;
 
 import com.ehunzango.unigo.R;
 import com.ehunzango.unigo.activities.MainActivity;
-import com.ehunzango.unigo.models.User;
 import com.ehunzango.unigo.services.FirebaseAuthService;
 import com.ehunzango.unigo.services.FirebaseUserService;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
@@ -98,7 +96,7 @@ public class ProfileFragment extends Fragment
         progressBar = view.findViewById(R.id.progress_bar);
 
         // Inicializar FAB
-        fab = view.findViewById(R.id.edit_fab);
+        fab = view.findViewById(R.id.button_calculate_route);
 
         // Configurar listener para botón de cierre de sesión
         logoutButton.setOnClickListener(v -> {

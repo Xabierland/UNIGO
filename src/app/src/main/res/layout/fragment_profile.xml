@@ -194,7 +194,7 @@
 
     <!-- FAB para editar/guardar -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/edit_fab"
+        android:id="@+id/button_calculate_route"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"

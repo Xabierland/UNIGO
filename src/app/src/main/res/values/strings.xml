@@ -77,4 +77,12 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="engineer_school">Escuela de Ingeniería de Vitoria-Gasteiz</string>
+    <string name="economy_school">Facultad de Economía y Empresa</string>
+    <string name="sports_school">Facultad de Educación y Deporte</string>
+    <string name="pharmacy_school">Facultad de Farmacia</string>
+    <string name="letter_school">Facultad de Letras</string>
+    <string name="relations_school">Facultad de Relaciones Laborales y Trabajo Social</string>
+    <string name="medicine_school">Unidad Docente de Medicina</string>
+    <string name="select_faculty">Selecciona un destino</string>
 </resources>

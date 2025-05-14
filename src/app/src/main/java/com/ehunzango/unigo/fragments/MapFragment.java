@@ -42,6 +42,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -117,62 +118,7 @@ public class MapFragment extends Fragment
     private TransportType selectedTransport;
 
 
-    public MapFragment()
-    {
-        // TODO: Cambiar los nombres por identificadores de idioma
-        facultyHashMap = new HashMap<>();
-        FacultyInfo info = null;
-
-        info = new FacultyInfo(
-                FacultyIdentifier.Escuela_Ingenieria_Vitoria_Gasteiz,
-                "Escuela de Ingeniería de Vitoria-Gasteiz",
-                R.drawable.engineering_24px,
-                new LatLng(42.83921784390094, -2.6744744038759203));
-        facultyHashMap.put(info.id, info);
-
-
-        info = new FacultyInfo(
-                FacultyIdentifier.Facultad_Economia_Empresa,
-                "Facultad de Economía y Empresa",
-                R.drawable.savings_24px,
-                new LatLng(42.83758845850613, -2.668680518146171));
-        facultyHashMap.put(info.id, info);
-
-        info = new FacultyInfo(
-                FacultyIdentifier.Facultad_Educacion_Deporte,
-                "Facultad de Educación y Deporte",
-                R.drawable.sports_tennis_24px,
-                new LatLng(42.83933934794871, -2.6744481633876007));
-        facultyHashMap.put(info.id, info);
-
-        info = new FacultyInfo(
-                FacultyIdentifier.Facultad_Farmacia,
-                "Facultad de Farmacia",
-                R.drawable.mixture_med_24px,
-                new LatLng(42.84064230072461, -2.6718272245113464));
-        facultyHashMap.put(info.id, info);
-
-        info = new FacultyInfo(
-                FacultyIdentifier.Facultad_Letras,
-                "Facultad de Letras",
-                R.drawable.history_edu_24px,
-                new LatLng(42.8403414326549, -2.670404675504716));
-        facultyHashMap.put(info.id, info);
-
-        info = new FacultyInfo(
-                FacultyIdentifier.Facultad_Relaciones_Laborales_Trabajo_Social,
-                "Facultad de Relaciones Laborales y Trabajo Social",
-                R.drawable.handshake_24px,
-                new LatLng(42.8400093266957, -2.670331999775272));
-        facultyHashMap.put(info.id, info);
-
-        info = new FacultyInfo(
-                FacultyIdentifier.Unidad_Docente_Medicina,
-                "Unidad Docente de Medicina",
-                R.drawable.medical_services_24px,
-                new LatLng(42.8390455018132, -2.670360696479438));
-        facultyHashMap.put(info.id, info);
-    }
+    public MapFragment() {}
 
     public static MapFragment newInstance(String param1, String param2) {
         MapFragment fragment = new MapFragment();
@@ -200,6 +146,7 @@ public class MapFragment extends Fragment
     {
         super.onViewCreated(view, savedInstanceState);
 
+        initializeFaculties();
 
         // Pedir permisos de ubicación
         if (listener != null)
@@ -256,15 +203,74 @@ public class MapFragment extends Fragment
 
         // TRANSPORT TYPE IMAGE BUTTONS
         setUpTansportDropdown(view);
+
+        FloatingActionButton calculateRouteButton = view.findViewById(R.id.button_calculate_route);
+        calculateRouteButton.setOnClickListener(v -> {calculateRoute(); });
+
     }
 
 
+    private void initializeFaculties()
+    {
+        facultyHashMap = new HashMap<>();
+        FacultyInfo info = null;
+
+        info = new FacultyInfo(
+                FacultyIdentifier.Escuela_Ingenieria_Vitoria_Gasteiz,
+                getString(R.string.engineer_school), //"Escuela de Ingeniería de Vitoria-Gasteiz",
+                R.drawable.engineering_24px,
+                new LatLng(42.83921784390094, -2.6744744038759203));
+        facultyHashMap.put(info.id, info);
+
+
+        info = new FacultyInfo(
+                FacultyIdentifier.Facultad_Economia_Empresa,
+                getString(R.string.economy_school),//"Facultad de Economía y Empresa",
+                R.drawable.savings_24px,
+                new LatLng(42.83758845850613, -2.668680518146171));
+        facultyHashMap.put(info.id, info);
+
+        info = new FacultyInfo(
+                FacultyIdentifier.Facultad_Educacion_Deporte,
+                getString(R.string.sports_school), //"Facultad de Educación y Deporte",
+                R.drawable.sports_tennis_24px,
+                new LatLng(42.83933934794871, -2.6744481633876007));
+        facultyHashMap.put(info.id, info);
+
+        info = new FacultyInfo(
+                FacultyIdentifier.Facultad_Farmacia,
+                getString(R.string.pharmacy_school), //"Facultad de Farmacia",
+                R.drawable.mixture_med_24px,
+                new LatLng(42.84064230072461, -2.6718272245113464));
+        facultyHashMap.put(info.id, info);
+
+        info = new FacultyInfo(
+                FacultyIdentifier.Facultad_Letras,
+                getString(R.string.letter_school), //"Facultad de Letras",
+                R.drawable.history_edu_24px,
+                new LatLng(42.8403414326549, -2.670404675504716));
+        facultyHashMap.put(info.id, info);
+
+        info = new FacultyInfo(
+                FacultyIdentifier.Facultad_Relaciones_Laborales_Trabajo_Social,
+                getString(R.string.relations_school), //"Facultad de Relaciones Laborales y Trabajo Social",
+                R.drawable.handshake_24px,
+                new LatLng(42.8400093266957, -2.670331999775272));
+        facultyHashMap.put(info.id, info);
+
+        info = new FacultyInfo(
+                FacultyIdentifier.Unidad_Docente_Medicina,
+                getString(R.string.medicine_school), //"Unidad Docente de Medicina",
+                R.drawable.medical_services_24px,
+                new LatLng(42.8390455018132, -2.670360696479438));
+        facultyHashMap.put(info.id, info);
+    }
     private void setUpDropDownMenu(View view)
     {
         Spinner dropDownMenu = view.findViewById(R.id.spinner_destinos);
 
         List<String> items = new ArrayList<>();
-        items.add("Selecciona un destino"); //TODO: Poner idioma
+        items.add(getString(R.string.select_faculty));
         dropDownOrder = new ArrayList<>();
         Collection<FacultyInfo> faculties = facultyHashMap.values();
         for (FacultyInfo faculty : faculties)
@@ -316,7 +322,6 @@ public class MapFragment extends Fragment
                 //Toast.makeText(getContext(), facultyNames.get(position), Toast.LENGTH_SHORT).show();
                 FacultyInfo info = dropDownOrder.get(position);
                 selectFaculty(info.id);
-                selectionRealizated();
             }
 
             @Override
@@ -403,7 +408,6 @@ public class MapFragment extends Fragment
             {
                 TransportType type = TransportType.values()[position];
                 transportSelected(type);
-                selectionRealizated();
             }
 
             @Override
@@ -435,7 +439,7 @@ public class MapFragment extends Fragment
     }
 
 
-    private void selectionRealizated()
+    private void calculateRoute()
     {
         if(selectedFaculty == null || selectedTransport == null)
         {
