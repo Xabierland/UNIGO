@@ -5,17 +5,29 @@ import java.util.zip.*;
 
 // TODO: fetch the zip from the web (all the cool kids do it)
 // TODO: Im sure this wont work because I tested it on a normal java proyect :)
+// // gtfs.zip path
+// File zipFile = new File(context.getFilesDir(), "data/gtfs.zip");
+//
+//         // Directory to unzip to
+//         File unzipDir = new File(context.getFilesDir(), "data/gtfs/");
+//
+// // Create directories if they don't exist
+// if (!unzipDir.exists() && !unzipDir.mkdirs()) {
+//         throw new IOException("Failed to create directory: " + unzipDir.getAbsolutePath());
+//         }
+//
+// // Use your unzip utility
+//         ZipUtils.unzip(zipFile.getAbsolutePath(), unzipDir.getAbsolutePath());
 public class ZipUtils {
-    public static final int BUFFER_SIZE = 4096;
+    private static final int BUFFER_SIZE = 8192;
 
     // src: https://stackoverflow.com/questions/3612660/utility-to-unzip-an-entire-archive-to-a-directory-in-java
-    public static void unzip(String zipFilePath, String destDirectory) throws IOException {
-        File destDir = new File(destDirectory);
-        if (!destDir.exists() && !destDir.mkdirs()) {
-            throw new IOException("Could not create directory " + destDir);
+    public static void unzip(InputStream zipInputStream, File destDirectory) throws IOException {
+        if (!destDirectory.exists() && !destDirectory.mkdirs()) {
+            throw new IOException("Could not create directory " + destDirectory);
         }
 
-        try (ZipInputStream zipIn = new ZipInputStream(new BufferedInputStream(new FileInputStream(zipFilePath)))) {
+        try (ZipInputStream zipIn = new ZipInputStream(new BufferedInputStream(zipInputStream))) {
             ZipEntry entry;
 
             while((entry = zipIn.getNextEntry()) != null) {
@@ -23,7 +35,7 @@ public class ZipUtils {
 
                 // Protect against Zip Slip vulnerability
                 File destFile = new File(destDirectory, entryName);
-                String canonicalDestDir = destDir.getCanonicalPath();
+                String canonicalDestDir = destDirectory.getCanonicalPath();
                 String canonicalDestFile = destFile.getCanonicalPath();
                 if (!canonicalDestFile.startsWith(canonicalDestDir + File.separator)) {
                     throw new IOException("Entry is outside of the target dir: " + entryName);
