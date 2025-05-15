@@ -83,8 +83,14 @@ public class MainActivity extends       BaseActivity
         // Inicializar servicios
         authService = FirebaseAuthService.getInstance();
 
-        // Obtener los datos del saved instance
-        if(savedInstanceState != null)
+        // Obtener el fragmento desde el intent (en caso de reinicio por ajustes)
+        if (getIntent() != null && getIntent().hasExtra("startFragment")) {
+            int fragmentOrdinal = getIntent().getIntExtra("startFragment", FragmentType.MAP.ordinal());
+            actualFragment = FragmentType.values()[fragmentOrdinal];
+            getIntent().removeExtra("startFragment");
+        }
+        // Obtener los datos del saved instance (desde el estado guardado, si no hay intent)
+        else if (savedInstanceState != null)
         {
             actualFragment = FragmentType.values()[savedInstanceState.getInt("actualFragment")];
         }
