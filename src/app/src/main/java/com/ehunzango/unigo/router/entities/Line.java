@@ -21,6 +21,7 @@ public class Line {
         MONORAIL(12),   // Monorail
         // CUSTOM
         WALK(-1),       // Tipi-Tapa
+        BIKE(-3),       // Bicycle routes
         NONE(-2);       // Special purpose (e.g., virtual nodes)
 
         private final int gtfsCode;
