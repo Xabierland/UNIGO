@@ -1,6 +1,5 @@
 package com.ehunzango.unigo.router;
 
-
 import com.ehunzango.unigo.router.entities.Line;
 import com.ehunzango.unigo.router.entities.Node;
 import com.ehunzango.unigo.router.utils.DistanceCache;
@@ -28,13 +27,10 @@ public class RouteFinder {
      *     - load data from GTFS
      *     - add more data to the calc (line timings, walk speep is a little bit sus...)
      *     - take into account that some lines may be filtered in hollidays, or by the user (this can be done previously)
-     *     - List of goals vs running the algo n times and getting the fastest (Threads are cool for this)
      *     - do ghost walk or make google API calls?
      *     - do we store data of previous routes?
      *     - add priority to staying in the same line.
      *     - remember to split lines in 2 when they are bidirectional (all the cool kids do this)
-     *     - improve the DistanceCache, by simplifiying the hash to (x, y) so same point distances are not calculated if
-     *     they are in a diferent line.
      *     - go to church.
      *   test:
      *     - validity of results
@@ -57,14 +53,9 @@ public class RouteFinder {
             System.out.println(current);
             Node currNode = current.node;
 
-            if (current.cost > dist.getOrDefault(currNode, Float.POSITIVE_INFINITY)) {
-                continue;
-            }
+            if (current.cost > dist.getOrDefault(currNode, Float.POSITIVE_INFINITY)) { continue; }
 
-            if (currNode.isSameCordsAs(goal)) {
-                prev.put(goal, currNode);
-                return reconstructPath(prev, goal);
-            }
+            if (currNode.isSameCordsAs(goal)) { return reconstructPath(prev, goal); }
 
             Integer index = currNode.line.node_map.get(currNode);
 
@@ -112,6 +103,9 @@ public class RouteFinder {
                     relax(queue, dist, prev, currNode, node, transferPenalty + heuristic);
                 }
             }
+
+            // 3. Walk: go from where we are to the destination
+            relax(queue, dist, prev, currNode, goal, (float)currNode.fast_manhattan(goal));
         }
 
         return null; // No path found
@@ -137,6 +131,7 @@ public class RouteFinder {
         Line walkLine = new Line("Tipi-Tapa", Line.Type.WALK, List.of());
         Node p = null;
         for (Node at = goal; at != null; at = prev.get(at)) {
+            System.out.println(at);
             if (p != null && p.line != at.line && !at.isSameCordsAs(path.getFirst())) {
                 Node walk = at.clone();
                 walk.line = walkLine;
@@ -163,4 +158,3 @@ public class RouteFinder {
         }
     }
 }
-
