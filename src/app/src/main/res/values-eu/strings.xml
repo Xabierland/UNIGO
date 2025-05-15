@@ -77,4 +77,12 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="engineer_school">Vitoria-Gasteizko Ingeniaritza Eskola</string>
+    <string name="economy_school">Ekonomia eta Enpresa Fakultatea</string>
+    <string name="sports_school">Hezkuntza eta Kirol Fakultatea</string>
+    <string name="pharmacy_school">Farmazia Fakultatea</string>
+    <string name="letter_school">Letren Fakultatea</string>
+    <string name="relations_school">Lan Harreman eta Gizarte Langintza Fakultatea</string>
+    <string name="medicine_school">Medikuntzako Irakasgunea</string>
+    <string name="select_faculty">Hautatu helburu bat</string>
 </resources>
