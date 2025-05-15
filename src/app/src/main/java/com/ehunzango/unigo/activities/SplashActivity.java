@@ -21,7 +21,7 @@ import androidx.core.view.GestureDetectorCompat;
 
 import com.ehunzango.unigo.R;
 import com.ehunzango.unigo.services.FirebaseAuthService;
-import com.ehunzango.unigo.services.GTFSService;
+import com.ehunzango.unigo.services.RouteService;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Random;
@@ -86,17 +86,17 @@ public class SplashActivity extends BaseActivity {
         // Llamar a initViews después de setContentView para que las vistas ya estén infladas
         initViews();
 
-        // Inicializar servicio GTFS
-        GTFSService gtfsService = GTFSService.getInstance();
-        gtfsService.initialize(this, new GTFSService.GTFSCallback() {
+        // Inicializar servicio de rutas
+        RouteService routeService = RouteService.getInstance();
+        routeService.initialize(this, new RouteService.RouteCallback() {
             @Override
             public void onSuccess() {
-                Log.d(TAG, "Servicio GTFS inicializado correctamente");
+                Log.d(TAG, "Servicio de rutas inicializado correctamente");
             }
 
             @Override
             public void onError(String errorMessage) {
-                Log.e(TAG, "Error al inicializar servicio GTFS: " + errorMessage);
+                Log.e(TAG, "Error al inicializar servicio de rutas: " + errorMessage);
             }
         });
 
