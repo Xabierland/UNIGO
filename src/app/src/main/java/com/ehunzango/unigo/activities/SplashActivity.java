@@ -20,9 +20,14 @@ import androidx.cardview.widget.CardView;
 import androidx.core.view.GestureDetectorCompat;
 
 import com.ehunzango.unigo.R;
+import com.ehunzango.unigo.router.utils.FetchUtil;
+import com.ehunzango.unigo.router.utils.ZipUtils;
 import com.ehunzango.unigo.services.FirebaseAuthService;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -84,7 +89,29 @@ public class SplashActivity extends BaseActivity {
         
         // Llamar a initViews después de setContentView para que las vistas ya estén infladas
         initViews();
-        
+
+        // TODO: move this to a util class that checks for internet conection, and then does its thing
+        //       if there is an error and no zip is found we fall back to static data...
+        File zipFile = new File(getFilesDir(), "data/gtfs.zip");
+        String url = "https://02-pro-e3525cfb1b3d99109c5220a2b24bcb30-inet.s3.itbatera.euskadi.eus/transport/moveuskadi/alavabus/gtfs_alavabus.zip";
+
+        new Thread(() -> {
+            Log.d("THREAD", "= START ======================================");
+            try {
+                Log.d("Thread:FetchZip","THREAD: url: " + url);
+                FetchUtil.downloadFile(url, zipFile);
+
+                // Then unzip if needed
+                File unzipDir = new File(getFilesDir(), "data/gtfs");
+                if (!unzipDir.exists()) unzipDir.mkdirs();
+
+                ZipUtils.unzip(new FileInputStream(zipFile), unzipDir);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Log.d("THREAD", "= END ========================================");
+        }).start();
+
         // Iniciar verificación de autenticación
         checkAuthentication();
     }
