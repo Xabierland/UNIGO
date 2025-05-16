@@ -15,8 +15,11 @@ import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Persister;
 
+import kotlin.text.UStringsKt;
+
 // for more info about GTFS: https://gtfs.org/documentation/schedule/reference/
-public class NETEXAdapter implements IDataAdapter {
+public class NETEXAdapter implements IDataAdapter
+{
 
     // TODO: check the validity of this code blob :)
     // TODO: make some visualizing with a map, the points and the path...
@@ -26,7 +29,7 @@ public class NETEXAdapter implements IDataAdapter {
     @Override
     public boolean load(String path, List<Line> lines) {
         try {
-            // TODO: TIME TEST THIS SHIT
+            // Listo
             Map<String, Stop> stopMap = loadStops(path + "/stops.xml");
             Map<String, Route> routeMap = loadRoutes(path + "/routes.xml");
             Map<String, Trip> tripMap = loadTrips(path + "/trips.zml");
@@ -36,8 +39,10 @@ public class NETEXAdapter implements IDataAdapter {
             System.out.println("route count:    " + routeMap.size());
             System.out.println("trip count:     " + tripMap.size());
             System.out.println("stopTime count: " + stopTimeMap.size());
+
             int i = 0;
-            for (Trip trip : tripMap.values()) {
+            for (Trip trip : tripMap.values())
+            {
                 i++;
                 if (trip.route_id == null) {
                     System.out.println("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFf: " + i);
@@ -191,22 +196,26 @@ public class NETEXAdapter implements IDataAdapter {
         Persister serializer = new Persister();
         File file = new File(filename);
 
-        PublicationDeliveryXml data = serializer.read(PublicationDeliveryXml.class, file);
+        PublicationDeliveryStopsXml data = serializer.read(PublicationDeliveryStopsXml.class, file);
 
         Map<String, Stop> map = new HashMap<>();
-        if (data.stopPoints != null && data.stopPoints.stops != null) {
-            for (Stop s : data.stopPoints.stops) {
+        if(data.dataObjects != null && data.dataObjects.serviceFrame != null && data.dataObjects.serviceFrame.scheduledStopPoints != null && data.dataObjects.serviceFrame.scheduledStopPoints.stops != null)
+        {
+            for (Stop s : data.dataObjects.serviceFrame.scheduledStopPoints.stops)
+            {
                 map.put(s.stop_id, s);
             }
         }
+
         return map;
     }
 
-    private Map<String, Route> loadRoutes(String filename) throws Exception {
+    private Map<String, Route> loadRoutes(String filename) throws Exception
+    {
         Persister serializer = new Persister();
         File file = new File(filename);
 
-        PublicationDelivery pubDelivery = serializer.read(PublicationDelivery.class, file);
+        PublicationDeliveryRoutesXML pubDelivery = serializer.read(PublicationDeliveryRoutesXML.class, file);
 
         Map<String, Route> map = new HashMap<>();
         if (pubDelivery.dataObjects != null &&
@@ -218,6 +227,67 @@ public class NETEXAdapter implements IDataAdapter {
                 map.put(r.route_id, r);
             }
         }
+        return map;
+    }
+
+    private Map<String, Trip> loadTrips(String filename) throws Exception
+    {
+        Persister serializer = new Persister();
+        File file = new File(filename);
+
+        PublicationDeliveryTripsXML pubDelivery = serializer.read(PublicationDeliveryTripsXML.class, file);
+
+        Map<String, Trip> map = new HashMap<>();
+        if (pubDelivery.dataObjects != null &&
+                pubDelivery.dataObjects.timetableFrame != null &&
+                pubDelivery.dataObjects.timetableFrame.vehicleJourneys != null &&
+                pubDelivery.dataObjects.timetableFrame.vehicleJourneys.serviceJourneys != null)
+        {
+            for (Trip t : pubDelivery.dataObjects.timetableFrame.vehicleJourneys.serviceJourneys)
+            {
+                t.cargar();
+                map.put(t.trip_id, t);
+            }
+        }
+        return map;
+    }
+
+    private Map<String, List<StopTime>> loadStopTimes(String filename) throws Exception
+    {
+
+        Persister serializer = new Persister();
+        File file = new File(filename);
+
+        PublicationDeliveryStopTimesXML pubDelivery = serializer.read(PublicationDeliveryStopTimesXML.class, file);
+
+        Map<String, List<StopTime>> map = new HashMap<>();
+        // trip_id, ''   ''
+        if (pubDelivery.dataObjects != null &&
+                pubDelivery.dataObjects.timetableFrame != null &&
+                pubDelivery.dataObjects.timetableFrame.vehicleJourneys != null &&
+                pubDelivery.dataObjects.timetableFrame.vehicleJourneys.serviceJourneys != null)
+        {
+            for (ServiceJourneyStopTimesXML service : pubDelivery.dataObjects.timetableFrame.vehicleJourneys.serviceJourneys)
+            {
+                String trip_id = service.trip_id;
+                CallsStopTimesXML calls = service.calls;
+
+                if(calls != null)
+                {
+                    List<StopTime> stopTimes = new ArrayList<>();
+                    for (CallStopTimesXML call : calls.calls)
+                    {
+                        StopTime stopTime = new StopTime();
+                        stopTime.cargar(call, trip_id);
+                        stopTimes.add(stopTime);
+                    }
+                    map.put(trip_id, stopTimes);
+                }
+            }
+        }
+
+        map.values().forEach(list -> list.sort(Comparator.comparingInt(stop -> stop.stop_sequence)));
+
         return map;
     }
 
@@ -238,24 +308,9 @@ public class NETEXAdapter implements IDataAdapter {
         }
     }
 
-    private Map<String, List<StopTime>> loadStopTimes(String filename) throws Exception {
-        List<StopTime> stopTimes = loadCsv(filename, StopTime.class);
-        Map<String, List<StopTime>> map = new HashMap<>();
-        for (StopTime st : stopTimes) map.computeIfAbsent(st.trip_id, k -> new ArrayList<>()).add(st);
-        stopTimes.stream()
-                .limit(1)
-                .forEach(st -> printObjectFields(st));
-        // sort sequence
-        map.values().forEach(list -> list.sort(Comparator.comparingInt(stop -> stop.stop_sequence)));
-        return map;
-    }
 
-    private Map<String, Trip> loadTrips(String filename) throws Exception {
-        List<Trip> trips = loadCsv(filename, Trip.class);
-        Map<String, Trip> map = new HashMap<>();
-        for (Trip trip : trips) map.put(trip.trip_id, trip);
-        return map;
-    }
+
+
 
     private Map<String, Calendar> loadCalendar(String filename) throws Exception {
         List<Calendar> calendars = loadCsv(filename, Calendar.class);
@@ -303,6 +358,44 @@ public class NETEXAdapter implements IDataAdapter {
     //              +--------------------------------------------------------------------------+
 
     // STOPS -----------------------------------------------------------------------------
+
+
+    @Root(name = "PublicationDelivery", strict = false)
+    public class PublicationDeliveryStopsXml {
+        //@ElementList(entry = "ScheduledStopPoint", inline = true, required = false)
+        //public List<Stop> stops;
+
+        @Element(name = "dataObjects")
+        public DataObjetcsStopsXML dataObjects;
+
+        public PublicationDeliveryStopsXml() {}
+    }
+
+    @Root(name = "dataObjects", strict = false)
+    public class DataObjetcsStopsXML {
+        @Element(name = "ServiceFrame")
+        public ServiceFrameStopsXML serviceFrame;
+
+        public DataObjetcsStopsXML() {}
+    }
+
+    @Root(name = "ServiceFrame", strict = false)
+    public class ServiceFrameStopsXML {
+        @Element(name = "scheduledStopPoints")
+        public ScheduledStopPointsRoutesXML scheduledStopPoints;
+
+        public ServiceFrameStopsXML() {}
+    }
+
+    @Root(name = "scheduledStopPoints", strict = false)
+    public class ScheduledStopPointsRoutesXML
+    {
+        @ElementList(entry = "ScheduledStopPoint", inline = true, required = false)
+        public List<Stop> stops;
+
+        public ScheduledStopPointsRoutesXML() {}
+    }
+
     @Root(name = "ScheduledStopPoint", strict = false)
     public class Stop
     {
@@ -315,50 +408,21 @@ public class NETEXAdapter implements IDataAdapter {
         @Element(name = "Longitude")
         public double stop_lon;
 
-        @org.simpleframework.xml.Attribute(name = "id")
-
         public Stop() {}
     }
 
-    @Root(name = "StopPoints", strict = false)
-    public class StopPointsXml {
-        @ElementList(entry = "ScheduledStopPoint", inline = true, required = false)
-        public List<Stop> stops;
 
-        public StopPointsXml() {}
-    }
-
-    @Root(name = "PublicationDelivery", strict = false)
-    public class PublicationDeliveryXml {
-        @Element(name = "StopPoints", required = false)
-        public StopPointsXml stopPoints;
-
-        public PublicationDeliveryXml() {}
-    }
 
     // LINES -----------------------------------------------------------------------------
-    @Root(name = "Line", strict = false)
-    public class Route { // routes.xml
-        public Route() {
-        }
-
-        @org.simpleframework.xml.Attribute(name = "id")
-        public String route_id;
-        @Element(name = "PublicCode")
-        public String route_short_name;
-        @Element(name = "Description", required = false)
-        public String route_long_name;
-        public int route_type = 3;
-    }
 
     @Root(name = "PublicationDelivery", strict = false)
-    public class PublicationDelivery {
+    public class PublicationDeliveryRoutesXML {
         @Element(name = "dataObjects", required = false)
-        public DataObjects dataObjects;
+        public DataObjectsRoutesXML dataObjects;
     }
 
     @Root(name = "dataObjects", strict = false)
-    public class DataObjects {
+    public class DataObjectsRoutesXML {
         @Element(name = "SiteFrame", required = false)
         public SiteFrame siteFrame;
     }
@@ -375,77 +439,288 @@ public class NETEXAdapter implements IDataAdapter {
         public List<Route> routes;
     }
 
-    // STOPTIME -----------------------------------------------------------------------------
-    @Root(name = "Call", strict = false)
-    public static class StopTime { // stop_times.txt
-        public StopTime() {
+    @Root(name = "Line", strict = false)
+    public class Route { // routes.xml
+        public Route() {
         }
 
-        // Campo manualmente inyectado al parsear desde ServiceJourney
-        public String trip_id;
-
-        public String arrival_time;
-        public String departure_time;
-        public String stop_id;
-        public int stop_sequence;
-
-        // Campos auxiliares para mapear el XML NetEx
-        @Element(name = "Arrival", required = false)
-        private Arrival arrival;
-
-        @Element(name = "Departure", required = false)
-        private Departure departure;
-
-        @Element(name = "ScheduledStopPointRef", required = false)
-        private ScheduledStopPointRef stopPointRef;
-
-        @Attribute(name = "order", required = false)
-        private Integer order;
-
-        // Método postprocesamiento para transformar datos XML al formato GTFS
-        public void finalizeFromXML(String tripId) {
-            this.trip_id = tripId;
-            this.arrival_time = (arrival != null) ? arrival.time : null;
-            this.departure_time = (departure != null) ? departure.time : null;
-            this.stop_id = (stopPointRef != null) ? stopPointRef.ref : null;
-            this.stop_sequence = (order != null) ? order : 0;
-        }
-
-        // Clases internas para parsear subelementos
-        public static class Arrival {
-            @Element(name = "Time", required = false)
-            public String time;
-        }
-
-        public static class Departure {
-            @Element(name = "Time", required = false)
-            public String time;
-        }
-
-        public static class ScheduledStopPointRef {
-            @Attribute(name = "ref", required = false)
-            public String ref;
-        }
+        @org.simpleframework.xml.Attribute(name = "id")
+        public String route_id;
+        @Element(name = "PublicCode")
+        public String route_short_name;
+        @Element(name = "Description", required = false)
+        public String route_long_name;
+        public int route_type = 3;
     }
 
-    @Root(name = "ServiceJourney", strict = false)
-    public class Trip {
+    // TRIPS --------------------------------------------------------------
+    /*
+        @Root(name = "NOMBRE", strict = false)
+    public class NOMBRE { // NOMBRE.xml
+        public NOMBRE() {
+        }
 
+        //@org.simpleframework.xml.Attribute(name = "id")
+        //public String route_id;
+
+        //@Element(name = "PublicCode")
+        //public String route_short_name;
+
+        //@ElementList(entry = "Line", inline = true, required = false)
+        //public List<Route> routes;
+    }
+     */
+    @Root(name = "PublicationDelivery", strict = false)
+    public class PublicationDeliveryTripsXML { // trips.xml
+        public PublicationDeliveryTripsXML() {
+        }
+
+        @Element(name = "dataObjects")
+        public DataObjectsTripsXML dataObjects;
+    }
+
+    @Root(name = "dataObjects", strict = false)
+    public class DataObjectsTripsXML { // trips.xml
+        public DataObjectsTripsXML() {
+        }
+
+        @Element(name = "TimetableFrame")
+        public TimetableFrame timetableFrame;
+    }
+
+    @Root(name = "TimetableFrame", strict = false)
+    public class TimetableFrame { // trips.xml
+        public TimetableFrame() {
+        }
+
+        @Element(name = "vehicleJourneys")
+        public VehicleJourneysTripsXML vehicleJourneys;
+    }
+
+    @Root(name = "vehicleJourneys", strict = false)
+    public class VehicleJourneysTripsXML { // trips.xml
+        public VehicleJourneysTripsXML() {
+        }
+
+        //@org.simpleframework.xml.Attribute(name = "id")
+        //public String route_id;
+
+        @ElementList(entry = "ServiceJourney", inline = true, required = false)
+        public List<Trip> serviceJourneys;
+
+        //@Element(name = "vehicleJourneys")
+        //public VehicleJourneysTripsXML vehicleJourneys;
+    }
+
+    @Root(name = "vehicleJourneys", strict = false)
+    public class Trip { // trips.xml
         public Trip() {
         }
 
         @Element(name = "LineRef", required = false)
         public String route_id;
 
-        @Element(name = "OperatingDayRef", required = false)
         public String service_id;
 
-        @Element(name = "id", required = false)
+        @Element(name = "RouteView", required = false)
+        public RouteViewTripsXML routeView;
+
+        @org.simpleframework.xml.Attribute(name = "id")
         public String trip_id;
 
         @Element(name = "JourneyPatternRef", required = false)
         public String shape_id;
+
+
+        public void cargar()
+        {
+            shape_id = routeView.shape_id;
+        }
     }
+
+    @Root(name = "RouteView", strict = false)
+    public class RouteViewTripsXML { // trips.xml
+        public RouteViewTripsXML() {
+        }
+
+        @Element(name = "LinkSequenceProjectionRef", required = false)
+        public String shape_id;
+
+    }
+
+    // STOPTIME -----------------------------------------------------------------------------
+    /*
+        @Root(name = "NOMBRE", strict = false)
+    public class NOMBRE { // NOMBRE.xml
+        public NOMBRE() {
+        }
+
+        //@org.simpleframework.xml.Attribute(name = "id")
+        //public String route_id;
+
+        //@Element(name = "PublicCode")
+        //public String route_short_name;
+
+        //@ElementList(entry = "Line", inline = true, required = false)
+        //public List<Route> routes;
+    }
+     */
+
+    @Root(name = "PublicationDelivery", strict = false)
+    public class PublicationDeliveryStopTimesXML { // NOMBRE.xml
+        public PublicationDeliveryStopTimesXML() {
+        }
+
+        //@org.simpleframework.xml.Attribute(name = "id")
+        //public String route_id;
+
+        @Element(name = "dataObjects")
+        public DataObjectsStopTimesXML dataObjects;
+
+        //@ElementList(entry = "Line", inline = true, required = false)
+        //public List<Route> routes;
+    }
+
+    @Root(name = "dataObjects", strict = false)
+    public class DataObjectsStopTimesXML { // NOMBRE.xml
+        public DataObjectsStopTimesXML() {
+        }
+
+        //@org.simpleframework.xml.Attribute(name = "id")
+        //public String route_id;
+
+        @Element(name = "TimetableFrame")
+        public TimetableFrameStopTimesXML timetableFrame;
+
+        //@ElementList(entry = "Line", inline = true, required = false)
+        //public List<Route> routes;
+    }
+
+    @Root(name = "TimetableFrame", strict = false)
+    public class TimetableFrameStopTimesXML { // NOMBRE.xml
+        public TimetableFrameStopTimesXML() {
+        }
+
+        //@org.simpleframework.xml.Attribute(name = "id")
+        //public String route_id;
+
+        @Element(name = "vehicleJourneys")
+        public VehicleJourneysStopTimesXML vehicleJourneys;
+
+        //@ElementList(entry = "Line", inline = true, required = false)
+        //public List<Route> routes;
+    }
+
+    @Root(name = "vehicleJourneys", strict = false)
+    public class VehicleJourneysStopTimesXML { // NOMBRE.xml
+        public VehicleJourneysStopTimesXML() {
+        }
+
+        //@org.simpleframework.xml.Attribute(name = "id")
+        //public String route_id;
+
+        //@Element(name = "vehicleJourneys")
+        //public VehicleJourneysstopTimesXML vehicleJourneys;
+
+        @ElementList(entry = "ServiceJourney", inline = true, required = false)
+        public List<ServiceJourneyStopTimesXML> serviceJourneys;
+    }
+
+    @Root(name = "ServiceJourney", strict = false)
+    public class ServiceJourneyStopTimesXML { // NOMBRE.xml
+        public ServiceJourneyStopTimesXML() {
+        }
+
+        @org.simpleframework.xml.Attribute(name = "id")
+        public String trip_id;
+
+        @Element(name = "calls")
+        public CallsStopTimesXML calls;
+
+    }
+
+    @Root(name = "calls", strict = false)
+    public class CallsStopTimesXML { // NOMBRE.xml
+        public CallsStopTimesXML() {
+        }
+
+        @ElementList(entry = "Call", inline = true, required = false)
+        public List<CallStopTimesXML> calls;
+    }
+
+
+    @Root(name = "Call", strict = false)
+    public static class CallStopTimesXML { // stop_times.txt
+        public CallStopTimesXML() {
+        }
+
+        @org.simpleframework.xml.Attribute(name = "order")
+        public int order;
+
+        @Element(name = "ScheduledStopPointRef")
+        public String stop_id;
+
+        public String arrival_time;
+        public String departure_time;
+
+        @Element(name = "Arrival")
+        public ArrivalStopTimesXML arrival;
+
+        @Element(name = "Departure")
+        public DepartureStopTimesXML departure;
+
+        public void cargar()
+        {
+            arrival_time = arrival.time;
+            departure_time = departure.time;
+        }
+
+    }
+
+    @Root(name = "Arrival", strict = false)
+    public static class ArrivalStopTimesXML { // stop_times.txt
+        public ArrivalStopTimesXML() {
+        }
+        @Element(name = "Time")
+        public String time;
+
+    }
+
+    @Root(name = "Departure", strict = false)
+    public static class DepartureStopTimesXML { // stop_times.txt
+        public DepartureStopTimesXML() {
+        }
+        @Element(name = "Time")
+        public String time;
+    }
+
+    public static class StopTime { // stop_times.txt
+        public StopTime() {
+        }
+        public String trip_id;
+        public String arrival_time;
+        public String departure_time;
+        public String stop_id;
+        public int stop_sequence;
+
+        public void cargar(CallStopTimesXML c, String tripId )
+        {
+            if(c != null)
+            {
+                c.cargar();
+
+                trip_id = tripId;
+                arrival_time = c.arrival_time;
+                departure_time = c.departure_time;
+                stop_id = c.stop_id;
+                stop_sequence = c.order;
+            }
+        }
+    }
+
+
+
+    //------------------------------------------------------------------------------------------------------------
 
     @Root(name = "ServiceCalendarFrame", strict = false)
     public class Calendar {
