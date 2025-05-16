@@ -78,5 +78,6 @@ dependencies {
 
     // CSV
     implementation 'com.opencsv:opencsv:5.8'
+    implementation 'org.simpleframework:simple-xml:2.7.1'
 
 }
