@@ -1,6 +1,7 @@
 package com.ehunzango.unigo.fragments;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -30,6 +31,8 @@ import androidx.fragment.app.Fragment;
 import com.ehunzango.unigo.R;
 import com.ehunzango.unigo.adapters.ImageSpinnerAdapter;
 import com.ehunzango.unigo.adapters.SpinnerImageItem;
+import com.ehunzango.unigo.router.RouteFinder;
+import com.ehunzango.unigo.router.adapters.NETEXAdapter;
 import com.ehunzango.unigo.router.entities.Line;
 import com.ehunzango.unigo.router.entities.Node;
 import com.ehunzango.unigo.services.RouteService;
@@ -52,6 +55,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import org.checkerframework.checker.units.qual.A;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -526,6 +531,7 @@ public class MapFragment extends Fragment {
     }
 
     private void calculateRoute() {
+        // Todo : Idiomas
         if (!mapReady) {
             Toast.makeText(getContext(), "El mapa aún no está listo, espera un momento", Toast.LENGTH_SHORT).show();
             return;
@@ -699,6 +705,13 @@ public class MapFragment extends Fragment {
     private ArrayList<LatLng> createRoutePoints(LatLng start, LatLng end, TransportType transportType) {
         ArrayList<LatLng> routePoints = new ArrayList<>();
 
+
+        NETEXAdapter adapter = new NETEXAdapter();
+        ArrayList<Line> lines = new ArrayList<>();
+        adapter.load(requireContext().getFilesDir() + "/data/tuvisa", lines);
+
+
+
         // Para simplificar y asegurar que al menos se dibuja algo, usamos una ruta simple
         routePoints.add(start);
 
@@ -775,6 +788,7 @@ public class MapFragment extends Fragment {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private void obtainActualLocation(boolean updateMap) {
         if (!hasLocationPermission()) {
             Log.d(TAG, "obtainActualLocation: sin permisos");
