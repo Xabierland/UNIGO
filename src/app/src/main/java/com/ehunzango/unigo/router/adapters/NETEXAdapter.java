@@ -32,7 +32,7 @@ public class NETEXAdapter implements IDataAdapter
             // Listo
             Map<String, Stop> stopMap = loadStops(path + "/stops.xml");
             Map<String, Route> routeMap = loadRoutes(path + "/routes.xml");
-            Map<String, Trip> tripMap = loadTrips(path + "/trips.zml");
+            Map<String, Trip> tripMap = loadTrips(path + "/trips.xml");
             Map<String, List<StopTime>> stopTimeMap = loadStopTimes(path + "/stop_times.xml");
 
             System.out.println("stop count:     " + stopMap.size());
@@ -199,10 +199,11 @@ public class NETEXAdapter implements IDataAdapter
         PublicationDeliveryStopsXml data = serializer.read(PublicationDeliveryStopsXml.class, file);
 
         Map<String, Stop> map = new HashMap<>();
-        if(data.dataObjects != null && data.dataObjects.serviceFrame != null && data.dataObjects.serviceFrame.scheduledStopPoints != null && data.dataObjects.serviceFrame.scheduledStopPoints.stops != null)
+        if(data.dataObjects != null && data.dataObjects.composite != null && data.dataObjects.composite.frames != null && data.dataObjects.composite.frames.serviceFrame != null && data.dataObjects.composite.frames.serviceFrame.scheduledStopPoints != null && data.dataObjects.composite.frames.serviceFrame.scheduledStopPoints.stops != null)
         {
-            for (Stop s : data.dataObjects.serviceFrame.scheduledStopPoints.stops)
+            for (Stop s : data.dataObjects.composite.frames.serviceFrame.scheduledStopPoints.stops)
             {
+                s.cargar();
                 map.put(s.stop_id, s);
             }
         }
@@ -361,7 +362,7 @@ public class NETEXAdapter implements IDataAdapter
 
 
     @Root(name = "PublicationDelivery", strict = false)
-    public class PublicationDeliveryStopsXml {
+    public static class PublicationDeliveryStopsXml {
         //@ElementList(entry = "ScheduledStopPoint", inline = true, required = false)
         //public List<Stop> stops;
 
@@ -372,15 +373,31 @@ public class NETEXAdapter implements IDataAdapter
     }
 
     @Root(name = "dataObjects", strict = false)
-    public class DataObjetcsStopsXML {
-        @Element(name = "ServiceFrame")
-        public ServiceFrameStopsXML serviceFrame;
+    public static class DataObjetcsStopsXML {
+        @Element(name = "CompositeFrame")
+        public CompositeFrameStopsXML composite;
 
         public DataObjetcsStopsXML() {}
     }
 
+    @Root(name = "CompositeFrame", strict = false)
+    public static class CompositeFrameStopsXML {
+        @Element(name = "frames")
+        public FramesStopsXML frames;
+
+        public CompositeFrameStopsXML() {}
+    }
+
+    @Root(name = "frames", strict = false)
+    public static class FramesStopsXML {
+        @Element(name = "ServiceFrame")
+        public ServiceFrameStopsXML serviceFrame;
+
+        public FramesStopsXML() {}
+    }
+
     @Root(name = "ServiceFrame", strict = false)
-    public class ServiceFrameStopsXML {
+    public static class ServiceFrameStopsXML {
         @Element(name = "scheduledStopPoints")
         public ScheduledStopPointsRoutesXML scheduledStopPoints;
 
@@ -388,7 +405,7 @@ public class NETEXAdapter implements IDataAdapter
     }
 
     @Root(name = "scheduledStopPoints", strict = false)
-    public class ScheduledStopPointsRoutesXML
+    public static class ScheduledStopPointsRoutesXML
     {
         @ElementList(entry = "ScheduledStopPoint", inline = true, required = false)
         public List<Stop> stops;
@@ -397,18 +414,39 @@ public class NETEXAdapter implements IDataAdapter
     }
 
     @Root(name = "ScheduledStopPoint", strict = false)
-    public class Stop
+    public static class Stop
     {
         @org.simpleframework.xml.Attribute(name = "id")
         public String stop_id;
         @Element(name = "Name")
         public String stop_name;
+
+        public double stop_lat;
+        public double stop_lon;
+
+        @Element(name = "Location")
+        public LocationStopXML location;
+
+        public void cargar()
+        {
+            stop_lat = location.stop_lat;
+            stop_lon = location.stop_lon;
+        }
+
+
+        public Stop() {}
+    }
+
+    @Root(name = "Location", strict = false)
+    public static class LocationStopXML
+    {
         @Element(name = "Latitude")
         public double stop_lat;
         @Element(name = "Longitude")
         public double stop_lon;
 
-        public Stop() {}
+
+        public LocationStopXML() {}
     }
 
 
@@ -416,31 +454,31 @@ public class NETEXAdapter implements IDataAdapter
     // LINES -----------------------------------------------------------------------------
 
     @Root(name = "PublicationDelivery", strict = false)
-    public class PublicationDeliveryRoutesXML {
+    public static class PublicationDeliveryRoutesXML {
         @Element(name = "dataObjects", required = false)
         public DataObjectsRoutesXML dataObjects;
     }
 
     @Root(name = "dataObjects", strict = false)
-    public class DataObjectsRoutesXML {
+    public static class DataObjectsRoutesXML {
         @Element(name = "SiteFrame", required = false)
         public SiteFrame siteFrame;
     }
 
     @Root(name = "SiteFrame", strict = false)
-    public class SiteFrame {
+    public static class SiteFrame {
         @Element(name = "lines", required = false)
         public Lines lines;
     }
 
     @Root(name = "lines", strict = false)
-    public class Lines {
+    public static class Lines {
         @ElementList(entry = "Line", inline = true, required = false)
         public List<Route> routes;
     }
 
     @Root(name = "Line", strict = false)
-    public class Route { // routes.xml
+    public static class Route { // routes.xml
         public Route() {
         }
 
@@ -471,7 +509,7 @@ public class NETEXAdapter implements IDataAdapter
     }
      */
     @Root(name = "PublicationDelivery", strict = false)
-    public class PublicationDeliveryTripsXML { // trips.xml
+    public static class PublicationDeliveryTripsXML { // trips.xml
         public PublicationDeliveryTripsXML() {
         }
 
@@ -480,7 +518,7 @@ public class NETEXAdapter implements IDataAdapter
     }
 
     @Root(name = "dataObjects", strict = false)
-    public class DataObjectsTripsXML { // trips.xml
+    public static class DataObjectsTripsXML { // trips.xml
         public DataObjectsTripsXML() {
         }
 
@@ -489,7 +527,7 @@ public class NETEXAdapter implements IDataAdapter
     }
 
     @Root(name = "TimetableFrame", strict = false)
-    public class TimetableFrame { // trips.xml
+    public static class TimetableFrame { // trips.xml
         public TimetableFrame() {
         }
 
@@ -498,7 +536,7 @@ public class NETEXAdapter implements IDataAdapter
     }
 
     @Root(name = "vehicleJourneys", strict = false)
-    public class VehicleJourneysTripsXML { // trips.xml
+    public static class VehicleJourneysTripsXML { // trips.xml
         public VehicleJourneysTripsXML() {
         }
 
@@ -513,7 +551,7 @@ public class NETEXAdapter implements IDataAdapter
     }
 
     @Root(name = "vehicleJourneys", strict = false)
-    public class Trip { // trips.xml
+    public static class Trip { // trips.xml
         public Trip() {
         }
 
@@ -539,7 +577,7 @@ public class NETEXAdapter implements IDataAdapter
     }
 
     @Root(name = "RouteView", strict = false)
-    public class RouteViewTripsXML { // trips.xml
+    public static class RouteViewTripsXML { // trips.xml
         public RouteViewTripsXML() {
         }
 
@@ -567,7 +605,7 @@ public class NETEXAdapter implements IDataAdapter
      */
 
     @Root(name = "PublicationDelivery", strict = false)
-    public class PublicationDeliveryStopTimesXML { // NOMBRE.xml
+    public static class PublicationDeliveryStopTimesXML { // NOMBRE.xml
         public PublicationDeliveryStopTimesXML() {
         }
 
@@ -582,7 +620,7 @@ public class NETEXAdapter implements IDataAdapter
     }
 
     @Root(name = "dataObjects", strict = false)
-    public class DataObjectsStopTimesXML { // NOMBRE.xml
+    public static class DataObjectsStopTimesXML { // NOMBRE.xml
         public DataObjectsStopTimesXML() {
         }
 
@@ -597,7 +635,7 @@ public class NETEXAdapter implements IDataAdapter
     }
 
     @Root(name = "TimetableFrame", strict = false)
-    public class TimetableFrameStopTimesXML { // NOMBRE.xml
+    public static class TimetableFrameStopTimesXML { // NOMBRE.xml
         public TimetableFrameStopTimesXML() {
         }
 
@@ -612,7 +650,7 @@ public class NETEXAdapter implements IDataAdapter
     }
 
     @Root(name = "vehicleJourneys", strict = false)
-    public class VehicleJourneysStopTimesXML { // NOMBRE.xml
+    public static class VehicleJourneysStopTimesXML { // NOMBRE.xml
         public VehicleJourneysStopTimesXML() {
         }
 
@@ -627,7 +665,7 @@ public class NETEXAdapter implements IDataAdapter
     }
 
     @Root(name = "ServiceJourney", strict = false)
-    public class ServiceJourneyStopTimesXML { // NOMBRE.xml
+    public static class ServiceJourneyStopTimesXML { // NOMBRE.xml
         public ServiceJourneyStopTimesXML() {
         }
 
@@ -640,7 +678,7 @@ public class NETEXAdapter implements IDataAdapter
     }
 
     @Root(name = "calls", strict = false)
-    public class CallsStopTimesXML { // NOMBRE.xml
+    public static class CallsStopTimesXML { // NOMBRE.xml
         public CallsStopTimesXML() {
         }
 
