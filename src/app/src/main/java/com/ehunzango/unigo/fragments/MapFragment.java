@@ -30,6 +30,7 @@ import androidx.fragment.app.Fragment;
 import com.ehunzango.unigo.R;
 import com.ehunzango.unigo.adapters.ImageSpinnerAdapter;
 import com.ehunzango.unigo.adapters.SpinnerImageItem;
+import com.ehunzango.unigo.router.RouteFinder;
 import com.ehunzango.unigo.router.entities.Line;
 import com.ehunzango.unigo.router.entities.Node;
 import com.ehunzango.unigo.services.RouteService;
@@ -57,6 +58,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MapFragment extends Fragment {
     private static final String TAG = "MapFragment"; // Para facilitar la depuración
@@ -696,7 +698,44 @@ public class MapFragment extends Fragment {
         }
     }
 
+    private final RouteFinder rf = new RouteFinder();
     private ArrayList<LatLng> createRoutePoints(LatLng start, LatLng end, TransportType transportType) {
+        ArrayList<LatLng> routePoints = new ArrayList<>();
+
+        List<Line> lines = RouteService.getInstance()
+                .getLines()
+                .stream()
+                .filter(line -> line.type == Line.Type.BIKE) // TODO: change this bs
+                .collect(Collectors.toList());
+
+        if (transportType != TransportType.BIKE || lines.isEmpty()) {
+            Log.d(TAG, "FALL (1) BACK FUCK");
+            Log.d(TAG, transportType.toString());
+            Log.d(TAG, String.format("size: %d", lines.size()));
+            Log.d(TAG, String.format("size: %d", RouteService.getInstance().getLines().size()));
+            return createRoutePointsFallBack(start, end, transportType);
+        }
+
+        Line dummy = new Line("dummy", Line.Type.WALK, new ArrayList<>());
+        Node s = new Node(start.latitude, start.longitude, dummy);
+        Node e = new Node(end.latitude, end.longitude, dummy);
+        dummy.addNode(s, (float)s.dist(e));
+        dummy.addNode(e, Float.POSITIVE_INFINITY);
+        lines.add(dummy);
+
+        List<Node> path = rf.findShortestPath(s, e, lines);
+
+        if (path == null || path.isEmpty()) {
+            Log.d(TAG, "FALL (2) BACK FUCK");
+            return createRoutePointsFallBack(start, end, transportType);
+        }
+
+        return path.stream()
+                .map(node -> new LatLng(node.x, node.y))
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private ArrayList<LatLng> createRoutePointsFallBack(LatLng start, LatLng end, TransportType transportType) {
         ArrayList<LatLng> routePoints = new ArrayList<>();
 
         // Para simplificar y asegurar que al menos se dibuja algo, usamos una ruta simple

@@ -1,24 +1,12 @@
 package com.ehunzango.unigo.router.utils;
 
+import android.util.Log;
+
 import java.io.*;
 import java.util.zip.*;
 
-// TODO: fetch the zip from the web (all the cool kids do it)
-// TODO: Im sure this wont work because I tested it on a normal java proyect :)
-// // gtfs.zip path
-// File zipFile = new File(context.getFilesDir(), "data/gtfs.zip");
-//
-//         // Directory to unzip to
-//         File unzipDir = new File(context.getFilesDir(), "data/gtfs/");
-//
-// // Create directories if they don't exist
-// if (!unzipDir.exists() && !unzipDir.mkdirs()) {
-//         throw new IOException("Failed to create directory: " + unzipDir.getAbsolutePath());
-//         }
-//
-// // Use your unzip utility
-//         ZipUtils.unzip(zipFile.getAbsolutePath(), unzipDir.getAbsolutePath());
 public class ZipUtils {
+    private static final String TAG = "ZipUtils";
     private static final int BUFFER_SIZE = 8192;
 
     // src: https://stackoverflow.com/questions/3612660/utility-to-unzip-an-entire-archive-to-a-directory-in-java
@@ -45,6 +33,7 @@ public class ZipUtils {
                     if (!destFile.exists() && !destFile.mkdirs()) {
                         throw new IOException("Could not create directory: " + destFile);
                     }
+                    Log.d(TAG, String.format("dir '%s' created", destFile));
                 } else {
                     File parent = destFile.getParentFile();
                     if (!parent.exists() && !parent.mkdirs()) {
@@ -52,10 +41,12 @@ public class ZipUtils {
                     }
                     extractFile(zipIn, destFile);
                     removeBomFromFile(destFile);  // Strip BOM after extraction
+                    Log.d(TAG, String.format("file '%s' created", destFile));
                 }
                 zipIn.closeEntry();
             }
         }
+        Log.d(TAG, String.format("unzipped to '%s' :)", destDirectory));
     }
 
     private static void extractFile(ZipInputStream zipIn, File outFile) throws IOException {

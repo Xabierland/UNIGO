@@ -1,8 +1,12 @@
 package com.ehunzango.unigo.services;
 
 import android.content.Context;
+import android.os.Handler;
 import android.util.Log;
 
+import com.ehunzango.unigo.router.RouteFinder;
+import com.ehunzango.unigo.router.adapters.IDataAdapter;
+import com.ehunzango.unigo.router.adapters.SHPAdapter;
 import com.ehunzango.unigo.router.entities.Line;
 import com.ehunzango.unigo.router.utils.FetchUtil;
 import com.ehunzango.unigo.router.utils.ZipUtils;
@@ -21,7 +25,7 @@ public class RouteService {
     private static final String TAG = "RouteService";
     private static final String ZIP_DIR = "data";
     private static final String TUVISA_UNZIP_DIR = "data/tuvisa";
-    private static final String BIDEGORRI_UNZIP_DIR = "data/bidegorri";
+    private static final String BIDEGORRI_UNZIP_DIR = "data/viasciclistas23";
     private static final String TUVISA_ZIP_FILENAME = "netex_tuvisa.zip";
     private static final String TUVISA_URL = "https://02-pro-e3525cfb1b3d99109c5220a2b24bcb30-inet.s3.itbatera.euskadi.eus/transport/moveuskadi/tuvisa/netex_tuvisa.zip";
     private static final String BIDEGORRI_ZIP_FILENAME = "viasciclistas23.zip";
@@ -117,13 +121,21 @@ public class RouteService {
                     }
                     ZipUtils.unzip(new FileInputStream(bidegorriZipFile), bidegorriUnzipDir);
                 }
-                
+
+                IDataAdapter loader = new SHPAdapter();
                 // Marcar como completado con éxito
-                dataLoaded = true;
-                
+                dataLoaded = false;
+                String fullPath = new File(context.getFilesDir(), RouteService.BIDEGORRI_UNZIP_DIR).getAbsolutePath();
+                dataLoaded = loader.load(fullPath, this.lines);
+
+                Log.d(TAG, "=====================================");
+                Log.d(TAG, "DATA LOADED!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                Log.d(TAG, String.format("size: %d", this.lines.size()));
+                Log.d(TAG, "=====================================");
+
                 // Notificar éxito en el hilo principal
                 if (callback != null) {
-                    android.os.Handler mainHandler = new android.os.Handler(context.getMainLooper());
+                    Handler mainHandler = new Handler(context.getMainLooper());
                     mainHandler.post(callback::onSuccess);
                 }
                 
@@ -133,7 +145,7 @@ public class RouteService {
                 // Notificar error en el hilo principal
                 if (callback != null) {
                     final String errorMessage = e.getMessage();
-                    android.os.Handler mainHandler = new android.os.Handler(context.getMainLooper());
+                    Handler mainHandler = new Handler(context.getMainLooper());
                     mainHandler.post(() -> callback.onError(errorMessage));
                 }
             }

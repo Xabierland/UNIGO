@@ -1,5 +1,7 @@
 package com.ehunzango.unigo.router;
 
+import android.util.Log;
+
 import com.ehunzango.unigo.router.entities.Line;
 import com.ehunzango.unigo.router.entities.Node;
 import com.ehunzango.unigo.router.utils.DistanceCache;
@@ -18,6 +20,7 @@ public class RouteFinder {
     //       fetch all the walks between nodes and make it "independent" from fetching stuff for
     //       public transport data)
     private final static float WALK_SPEED = 1.0f / 1.3f; // seconds / meters
+    private final static float OTHER_TRANSPORT_SPEED = WALK_SPEED / 40; // seconds / meters
 
     private final DistanceCache distanceCache = new DistanceCache();
 
@@ -67,7 +70,7 @@ public class RouteFinder {
             if (index + 1 < currNode.line.node_list.size()) {
                 // NOTE: remember that bidirectional lines are splited into 2 individual lines :)
                 Node next = currNode.line.node_list.get(index + 1);
-                float delta = currNode.line.deltas.get(index); // cost from curr -> next
+                float delta = currNode.line.deltas.get(index) * OTHER_TRANSPORT_SPEED; // cost from curr -> next
                 float heuristic = (float)next.fast_manhattan(goal); // hcost from next -> goal
                 relax(queue, dist, prev, currNode, next, delta + heuristic);
             }
@@ -123,11 +126,6 @@ public class RouteFinder {
 
     private List<Node> reconstructPath(Map<Node, Node> prev, Node goal) {
         LinkedList<Node> path = new LinkedList<>();
-        System.out.println("------------------------------------------");
-        for (Node n : prev.keySet()) {
-            System.out.printf("%s -> %s\n", prev.get(n), n);
-        }
-        System.out.println("------------------------------------------");
         Line walkLine = new Line("Tipi-Tapa", Line.Type.WALK, List.of());
         Node p = null;
         for (Node at = goal; at != null; at = prev.get(at)) {
@@ -140,6 +138,14 @@ public class RouteFinder {
             path.addFirst(at);
             p = at;
         }
+        int i = 0;
+        StringBuilder sb = new StringBuilder();
+        sb.append("------------------------------------------");
+        for (Node node: path) {
+            sb.append(String.format("\t[%d]: %s\n", i, node));
+        }
+        sb.append("------------------------------------------");
+        Log.d("RouteFinder", "path\n" + sb.toString());
         return path;
     }
 

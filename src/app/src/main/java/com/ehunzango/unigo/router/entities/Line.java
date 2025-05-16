@@ -1,10 +1,13 @@
 package com.ehunzango.unigo.router.entities;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Line {
     public enum Type { // TODO: add a speed var, so if we go by distance metrics it's just to mult (this is if we don't have exact time mettrics)
@@ -71,6 +74,25 @@ public class Line {
         this.node_list.addAll(nodes);
         this.deltas.addAll(deltas);
     }
+
+    public Line dup() {
+        Line nLine = new Line(this.name, this.type, new ArrayList<>());
+        List<Node> nodes = this.node_list.stream()
+                .map(n -> n.clone(nLine))
+                .collect(Collectors.toList());
+        List<Float> deltas = new ArrayList<>(this.deltas);
+
+        // pop-it, flip-it and ship-it
+        deltas.remove(deltas.size() - 1); // pop Float.POSITIVE_INFINITY
+        Collections.reverse(nodes);             // flip
+        Collections.reverse(deltas);            // flip
+        deltas.add(Float.POSITIVE_INFINITY);    // ship Float.POSITIVE_INFINITY
+
+        nLine.addNode(nodes, deltas);
+
+        return nLine;
+    }
+
 
     @Override
     public String toString() {

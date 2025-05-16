@@ -14,6 +14,9 @@ public class Node {
     public Node clone() {
         return new Node(this.x, this.y, this.line);
     }
+    public Node clone(Line line) {
+        return new Node(this.x, this.y, line);
+    }
 
     @Override
     public boolean equals(Object obj) {

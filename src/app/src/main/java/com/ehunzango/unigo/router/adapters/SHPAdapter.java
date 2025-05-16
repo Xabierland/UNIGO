@@ -14,6 +14,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+/** IDEA:
+ *      A polyline is a set of parts that may or may not be connected, but each part is a set of
+ *      interconnected points but the shape they form can be arbitrary. So we make the simple stupid
+ *      play of:
+ *          1. check if they connect inline (part A ends were part B starts).
+ *          2. duplicating each part and rotating the dup one (they are bidirectional <:(B )~ )
+ *          3. just press play in the RouteFinder and hope for the best (b^u^)b
+ *  src: https://www.esri.com/content/dam/esrisites/sitecore-archive/Files/Pdfs/library/whitepapers/pdfs/shapefile.pdf
+ */
 
 public class SHPAdapter implements IDataAdapter {
     private static final String TAG = "SHPAdapter";
@@ -24,6 +35,10 @@ public class SHPAdapter implements IDataAdapter {
     public boolean load(String path, List<Line> lines) {
         try {
             File directory = new File(path);
+            if (!directory.exists()) {
+                Log.e(TAG, "Dir not found: " + path);
+                return false;
+            }
             File[] shpFiles = directory.listFiles((dir, name) -> name.toLowerCase().endsWith(".shp"));
 
             if (shpFiles == null || shpFiles.length == 0) {
@@ -92,6 +107,13 @@ public class SHPAdapter implements IDataAdapter {
                 }
             }
 
+            // HACK: we take all the lines as bidirectional (b^u^)b
+            lines.addAll(
+                    lines.stream()
+                            .map(Line::dup) // or line -> line.dup()
+                            .collect(Collectors.toList())
+            );
+
             Log.i(TAG, "Cargadas " + lines.size() + " líneas de archivos SHP");
             return true;
         } catch (Exception e) {
@@ -153,7 +175,8 @@ public class SHPAdapter implements IDataAdapter {
                 
                 ByteBuffer recordHeaderBuffer = ByteBuffer.wrap(recordHeaderBytes);
                 recordHeaderBuffer.order(ByteOrder.BIG_ENDIAN);
-                
+
+                // NOTE: we don't check for Record Number (I hope it doesn't matter)
                 int contentLength = recordHeaderBuffer.getInt(4) * 2;
                 
                 // Leer contenido del registro
@@ -178,7 +201,7 @@ public class SHPAdapter implements IDataAdapter {
                     for (int i = 0; i < numParts; i++) {
                         partIndices[i] = recordContentBuffer.getInt(44 + i * 4);
                     }
-                    partIndices[numParts] = numPoints; // Índice final
+                    partIndices[numParts] = numPoints; // Índice fina
                     
                     // Leer puntos
                     double[][] allPoints = new double[numPoints][2];
