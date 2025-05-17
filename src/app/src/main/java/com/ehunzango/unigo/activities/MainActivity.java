@@ -343,9 +343,10 @@ public class MainActivity extends       BaseActivity
     // ----- LISTENER MAP
 
     @Override
-    public boolean askLocationPermission()
-    {
-        return checkLocationPermission();
+    public boolean askLocationPermission() {
+        // Ya no necesitamos solicitar permisos aquí, solo devolvemos el estado actual
+        return ContextCompat.checkSelfPermission(this, 
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
     // ----- LISTENER PROFILE
