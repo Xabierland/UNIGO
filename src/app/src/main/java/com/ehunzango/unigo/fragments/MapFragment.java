@@ -652,39 +652,52 @@ public class MapFragment extends Fragment {
         }
 
 
+        if(viaje.destino != viaje.origen)
+        {
 
 
-        drawVehicle(userPosition, TransportType.WALK, getRouteColor(TransportType.WALK));
-        PolylineOptions lineOptions = new PolylineOptions()
-                .add(userPosition)
-                .add(paradaEntrada)
-                .color(getRouteColor(TransportType.WALK))
-                .width(8f);
-        Polyline line = mapGoogle.addPolyline(lineOptions);
+            drawVehicle(userPosition, TransportType.WALK, getRouteColor(TransportType.WALK));
+            PolylineOptions lineOptions = new PolylineOptions()
+                    .add(userPosition)
+                    .add(paradaEntrada)
+                    .color(getRouteColor(TransportType.WALK))
+                    .width(8f);
+            Polyline line = mapGoogle.addPolyline(lineOptions);
 
 
-        drawParadaBus(paradaEntrada, viaje.origen, viaje.linea, TransportType.BUS);
-        lineOptions = new PolylineOptions()
-                .addAll(viaje.linea.obtenerShape())
-                .color(getRouteColor(TransportType.BUS))
-                .width(8f);
+            drawParadaBus(paradaEntrada, viaje.origen, viaje.linea, TransportType.BUS);
+            lineOptions = new PolylineOptions()
+                    .addAll(viaje.linea.obtenerShape())
+                    .color(getRouteColor(TransportType.BUS))
+                    .width(8f);
         /*
         lineOptions = new PolylineOptions()
                 .add(paradaEntrada)
                 .add(paradaSalida)
                 .color(getRouteColor(TransportType.BUS))
                 .width(8f);*/
-        line = mapGoogle.addPolyline(lineOptions);
+            line = mapGoogle.addPolyline(lineOptions);
 
 
-        //drawVehicle(paradaSalida, TransportType.WALK, getRouteColor(TransportType.WALK));
-        drawParadaBus(paradaSalida, viaje.destino, viaje.linea, TransportType.WALK);
-        lineOptions = new PolylineOptions()
-                .add(paradaSalida)
-                .add(faculty.position)
-                .color(getRouteColor(TransportType.WALK))
-                .width(8f);
-        line = mapGoogle.addPolyline(lineOptions);
+            //drawVehicle(paradaSalida, TransportType.WALK, getRouteColor(TransportType.WALK));
+            drawParadaBus(paradaSalida, viaje.destino, viaje.linea, TransportType.WALK);
+            lineOptions = new PolylineOptions()
+                    .add(paradaSalida)
+                    .add(faculty.position)
+                    .color(getRouteColor(TransportType.WALK))
+                    .width(8f);
+            line = mapGoogle.addPolyline(lineOptions);
+        }
+        else
+        {
+            drawVehicle(userPosition, TransportType.WALK, getRouteColor(TransportType.WALK));
+            PolylineOptions lineOptions = new PolylineOptions()
+                    .add(userPosition)
+                    .add(faculty.position)
+                    .color(getRouteColor(TransportType.WALK))
+                    .width(8f);
+            Polyline line = mapGoogle.addPolyline(lineOptions);
+        }
     }
 
 
