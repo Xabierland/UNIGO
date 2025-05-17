@@ -545,31 +545,6 @@ public class SimpleBusRouteFinder
         }
 
         return map;
-
-
-
-
-
-
-        /*
-        Persister serializer = new Persister();
-        File file = new File(filename);
-
-        PublicationDeliveryTripsXML pubDelivery = serializer.read(PublicationDeliveryTripsXML.class, file);
-
-        Map<String, Trip> map = new HashMap<>();
-        if (pubDelivery.dataObjects != null &&
-                pubDelivery.dataObjects.timetableFrame != null &&
-                pubDelivery.dataObjects.timetableFrame.vehicleJourneys != null &&
-                pubDelivery.dataObjects.timetableFrame.vehicleJourneys.serviceJourneys != null)
-        {
-            for (Trip t : pubDelivery.dataObjects.timetableFrame.vehicleJourneys.serviceJourneys)
-            {
-                t.cargar();
-                map.put(t.trip_id, t);
-            }
-        }
-        return map;*/
     }
 
     private Map<String, List<HoraParada>> loadHorasParadas(String filename) throws Exception
@@ -692,7 +667,6 @@ public class SimpleBusRouteFinder
 
         return map;
     }
-
 
     private Map<String, Dibujito> loadShapes(String filename) throws Exception
     {
