@@ -61,6 +61,9 @@
     <string name="action_logout">Cerrar sesión</string>
     <string name="logout_message">¿Estás seguro de que quieres cerrar sesión?</string>
     <string name="anonymous_user">Usuario anónimo</string>
+    <string name="choose_photo_title">Cambiar foto de perfil</string>
+    <string name="camera_option">Tomar foto con la cámara</string>
+    <string name="gallery_option">Seleccionar de la galería</string>
     <string name="profile_photo_description">Foto de perfil</string>
 
     <!-- Configuración -->

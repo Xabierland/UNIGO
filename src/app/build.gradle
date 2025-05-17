@@ -61,6 +61,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-database'
+    implementation 'com.google.firebase:firebase-storage'
 
     // Firebase - Google Sign-In
     implementation 'com.google.android.gms:play-services-auth:21.0.0'
@@ -68,6 +69,8 @@ dependencies {
     // CircleImageView
     implementation 'de.hdodenhof:circleimageview:3.1.0'
 
+    // Glide para cargar imágenes
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
 
     // Preferences
     implementation 'androidx.preference:preference:1.2.0'
