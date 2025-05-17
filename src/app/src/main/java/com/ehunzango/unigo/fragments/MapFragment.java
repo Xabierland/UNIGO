@@ -592,7 +592,7 @@ public class MapFragment extends Fragment {
         }
         else if(selectedTransport == TransportType.WALK)
         {
-            calculateWalkingRoute();
+            calculateWalkingRoute(userPosition, faculty.position, true);
             return;
         }
         else
@@ -624,7 +624,8 @@ public class MapFragment extends Fragment {
         Toast.makeText(getContext(), "Ruta calculada a " + faculty.name, Toast.LENGTH_SHORT).show();
     }
 
-    private void calculateWalkingRoute() {
+    private void calculateWalkingRoute(LatLng origen, LatLng destino, boolean dibujarIcono)
+    {
         FacultyInfo faculty = facultyHashMap.get(selectedFaculty);
         if (faculty == null) {
             Toast.makeText(getContext(), "Selecciona un destino primero", Toast.LENGTH_SHORT).show();
@@ -632,7 +633,7 @@ public class MapFragment extends Fragment {
         }
 
         Toast.makeText(getContext(), "Calculando ruta a pie...", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "Iniciando cálculo de ruta a pie desde " + userPosition.toString() + " hasta " + faculty.position.toString());
+        Log.d(TAG, "Iniciando cálculo de ruta a pie desde " + origen.toString() + " hasta " + destino.toString());
 
         // Realizar la solicitud a la API de Routes en un hilo separado
         new Thread(() -> {
@@ -654,8 +655,8 @@ public class MapFragment extends Fragment {
                 JSONObject origin = new JSONObject();
                 JSONObject originLocation = new JSONObject();
                 originLocation.put("latLng", new JSONObject()
-                        .put("latitude", userPosition.latitude)
-                        .put("longitude", userPosition.longitude));
+                        .put("latitude", origen.latitude)
+                        .put("longitude", origen.longitude));
                 origin.put("location", originLocation);
                 requestBody.put("origin", origin);
                 
@@ -663,8 +664,8 @@ public class MapFragment extends Fragment {
                 JSONObject destination = new JSONObject();
                 JSONObject destinationLocation = new JSONObject();
                 destinationLocation.put("latLng", new JSONObject()
-                        .put("latitude", faculty.position.latitude)
-                        .put("longitude", faculty.position.longitude));
+                        .put("latitude", destino.latitude)
+                        .put("longitude", destino.longitude));
                 destination.put("location", destinationLocation);
                 requestBody.put("destination", destination);
                 
@@ -777,22 +778,23 @@ public class MapFragment extends Fragment {
                 requireActivity().runOnUiThread(() -> {
                     try {
                         // Limpiar mapa
-                        mapGoogle.clear();
+                        //mapGoogle.clear();
                         userMarker = null;
-                        
+
+                        /*
                         if (currentRoute != null) {
                             currentRoute.remove();
                             currentRoute = null;
-                        }
+                        }*/
                         
                         // Volver a añadir todos los marcadores
-                        addAllMarkers();
+                        //addAllMarkers();
                         
                         // Guardar puntos de la ruta
                         currentRoutePoints = routePoints;
                         
                         // Dibujar la ruta
-                        int routeColor = getRouteColor(selectedTransport);
+                        int routeColor = getRouteColor(TransportType.WALK);
                         currentRoute = drawRoute(currentRoutePoints, routeColor);
                         
                         if (currentRoute == null) {
@@ -800,9 +802,13 @@ public class MapFragment extends Fragment {
                             Toast.makeText(getContext(), "Error al dibujar la ruta", Toast.LENGTH_SHORT).show();
                             return;
                         }
-                        
-                        // Añadir icono del medio de transporte en el origen
-                        drawVehicle(userPosition, selectedTransport, routeColor);
+
+                        if(dibujarIcono)
+                        {
+                            // Añadir icono del medio de transporte en el origen
+                            drawVehicle(origen, TransportType.WALK, routeColor);
+                        }
+
                         
                         // Ajustar la cámara para mostrar toda la ruta
                         zoomToShowRoute(currentRoutePoints);
@@ -967,30 +973,30 @@ public class MapFragment extends Fragment {
         if(viaje.destino != viaje.origen)
         {
 
-
+            /*
             drawVehicle(userPosition, TransportType.WALK, getRouteColor(TransportType.WALK));
             PolylineOptions lineOptions = new PolylineOptions()
                     .add(userPosition)
                     .add(paradaEntrada)
                     .color(getRouteColor(TransportType.WALK))
                     .width(8f);
-            Polyline line = mapGoogle.addPolyline(lineOptions);
+            Polyline line = mapGoogle.addPolyline(lineOptions);*/
+
+            calculateWalkingRoute(userPosition, paradaEntrada, true);
 
 
             drawParadaBus(paradaEntrada, viaje.origen, viaje.linea, TransportType.BUS);
-            lineOptions = new PolylineOptions()
+            PolylineOptions lineOptions = new PolylineOptions()
                     .addAll(viaje.linea.obtenerShape())
                     .color(getRouteColor(TransportType.BUS))
                     .width(8f);
-        /*
-        lineOptions = new PolylineOptions()
-                .add(paradaEntrada)
-                .add(paradaSalida)
-                .color(getRouteColor(TransportType.BUS))
-                .width(8f);*/
-            line = mapGoogle.addPolyline(lineOptions);
+            Polyline line = mapGoogle.addPolyline(lineOptions);
 
 
+            calculateWalkingRoute(paradaSalida, faculty.position, false);
+            drawParadaBus(paradaSalida, viaje.destino, viaje.linea, TransportType.WALK);
+
+            /*
             //drawVehicle(paradaSalida, TransportType.WALK, getRouteColor(TransportType.WALK));
             drawParadaBus(paradaSalida, viaje.destino, viaje.linea, TransportType.WALK);
             lineOptions = new PolylineOptions()
@@ -998,7 +1004,7 @@ public class MapFragment extends Fragment {
                     .add(faculty.position)
                     .color(getRouteColor(TransportType.WALK))
                     .width(8f);
-            line = mapGoogle.addPolyline(lineOptions);
+            line = mapGoogle.addPolyline(lineOptions);*/
         }
         else
         {
