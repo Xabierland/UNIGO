@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.ehunzango.unigo.router.RouteFinder;
+import com.ehunzango.unigo.router.SimpleBusRouteFinder;
 import com.ehunzango.unigo.router.adapters.IDataAdapter;
 import com.ehunzango.unigo.router.adapters.NETEXAdapter;
 import com.ehunzango.unigo.router.adapters.SHPAdapter;
@@ -136,15 +137,19 @@ public class RouteService {
                 Log.d(TAG, "=====================================");
 
 
-                NETEXAdapter adapter = new NETEXAdapter();
+                //NETEXAdapter adapter = new NETEXAdapter();
                 // Marcar como completado con éxito
-                dataLoaded = false;
-                fullPath = new File(context.getFilesDir(), RouteService.TUVISA_UNZIP_DIR).getAbsolutePath();
-                dataLoaded = adapter.load(fullPath, this.linesBus);
+                //dataLoaded = false;
+                //fullPath = new File(context.getFilesDir(), RouteService.TUVISA_UNZIP_DIR).getAbsolutePath();
+                //dataLoaded = adapter.load(fullPath, this.linesBus);
+
+                SimpleBusRouteFinder busAdapter = SimpleBusRouteFinder.getInstance();
+                String busFullPath = new File(context.getFilesDir(), RouteService.TUVISA_UNZIP_DIR).getAbsolutePath();
+                busAdapter.cargarDatos(busFullPath);
 
                 Log.d(TAG, "=====================================");
                 Log.d(TAG, "DATA LOADED!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                Log.d(TAG, String.format("size: %d", this.linesBus.size()));
+                //Log.d(TAG, String.format("size: %d", this.linesBus.size()));
                 Log.d(TAG, "=====================================");
 
 

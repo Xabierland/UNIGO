@@ -85,4 +85,6 @@
     <string name="relations_school">Lan Harreman eta Gizarte Langintza Fakultatea</string>
     <string name="medicine_school">Medikuntzako Irakasgunea</string>
     <string name="select_faculty">Hautatu helburu bat</string>
+    <string name="linea">Linea</string>
+    <string name="parada">Geraleku</string>
 </resources>

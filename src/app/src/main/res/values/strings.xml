@@ -85,4 +85,6 @@
     <string name="relations_school">Facultad de Relaciones Laborales y Trabajo Social</string>
     <string name="medicine_school">Unidad Docente de Medicina</string>
     <string name="select_faculty">Selecciona un destino</string>
+    <string name="linea">Linea</string>
+    <string name="parada">Parada</string>
 </resources>

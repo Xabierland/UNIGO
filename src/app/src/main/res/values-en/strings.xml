@@ -85,4 +85,6 @@
     <string name="relations_school">Faculty of Labor Relations and Social Work</string>
     <string name="medicine_school">Teaching Unit of Medicine</string>
     <string name="select_faculty">Select a destination</string>
+    <string name="linea">Line</string>
+    <string name="parada">Stop</string>
 </resources>

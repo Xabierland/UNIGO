@@ -2,7 +2,9 @@ package com.ehunzango.unigo.fragments;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -18,6 +20,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,6 +37,7 @@ import com.ehunzango.unigo.adapters.ImageSpinnerAdapter;
 import com.ehunzango.unigo.adapters.SpinnerImageItem;
 import com.ehunzango.unigo.router.RouteFinder;
 import com.ehunzango.unigo.router.RouteFinder;
+import com.ehunzango.unigo.router.SimpleBusRouteFinder;
 import com.ehunzango.unigo.router.adapters.NETEXAdapter;
 import com.ehunzango.unigo.router.entities.Line;
 import com.ehunzango.unigo.router.entities.Node;
@@ -124,8 +129,7 @@ public class MapFragment extends Fragment {
     private enum TransportType {
         WALK,
         BIKE,
-        BUS,
-        CAR
+        BUS
     }
 
     // Selection
@@ -573,7 +577,16 @@ public class MapFragment extends Fragment {
         addAllMarkers();
 
         // Crear y dibujar la ruta según el tipo de transporte
-        currentRoutePoints = createRoutePoints(userPosition, faculty.position, selectedTransport);
+        if(selectedTransport == TransportType.BUS)
+        {
+            simpleBusRoute();
+            return;
+        }
+        else
+        {
+            currentRoutePoints = createRoutePoints(userPosition, faculty.position, selectedTransport);
+        }
+
         int routeColor = getRouteColor(selectedTransport);
 
         Log.d(TAG, "Dibujando ruta con " + currentRoutePoints.size() + " puntos");
@@ -597,6 +610,83 @@ public class MapFragment extends Fragment {
         // Mostrar mensaje de confirmación
         Toast.makeText(getContext(), "Ruta calculada a " + faculty.name, Toast.LENGTH_SHORT).show();
     }
+
+    private void simpleBusRoute()
+    {
+        FacultyInfo faculty = facultyHashMap.get(selectedFaculty);
+
+        if(SimpleBusRouteFinder.getInstance().loaded == false)
+        {
+            Toast.makeText(getContext(), "Los datos se estan cargando", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+
+        SimpleBusRouteFinder.Viaje viaje = SimpleBusRouteFinder.getInstance().obtenerViaje((float) userPosition.latitude, (float) userPosition.longitude, (float) faculty.position.latitude, (float) faculty.position.longitude);
+
+        LatLng paradaEntrada = null;
+        LatLng paradaSalida = null;
+        if(viaje == null)
+        {
+            Log.d("mitag", "\t Viaje == null :(");
+            Toast.makeText(getContext(), "No se pudo encontrar una ruta", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try
+        {
+            paradaEntrada = new LatLng((double)viaje.origen.latitud, (double)viaje.origen.longitud);
+            paradaSalida = new LatLng((double)viaje.destino.latitud, (double)viaje.destino.longitud);
+
+            //currentRoutePoints = new ArrayList<>();
+
+            //currentRoutePoints.add(userPosition);
+            //currentRoutePoints.add(origen);
+            //currentRoutePoints.add(destino);
+            //currentRoutePoints.add(faculty.position);
+        }
+        catch (Exception e)
+        {
+            Log.d("mitag", "\t Excepcion en calculateRoute :(");
+            Log.d("mitag", e.getMessage());
+        }
+
+
+
+
+        drawVehicle(userPosition, TransportType.WALK, getRouteColor(TransportType.WALK));
+        PolylineOptions lineOptions = new PolylineOptions()
+                .add(userPosition)
+                .add(paradaEntrada)
+                .color(getRouteColor(TransportType.WALK))
+                .width(8f);
+        Polyline line = mapGoogle.addPolyline(lineOptions);
+
+
+        drawParadaBus(paradaEntrada, viaje.origen, viaje.linea, TransportType.BUS);
+        lineOptions = new PolylineOptions()
+                .addAll(viaje.linea.obtenerShape())
+                .color(getRouteColor(TransportType.BUS))
+                .width(8f);
+        /*
+        lineOptions = new PolylineOptions()
+                .add(paradaEntrada)
+                .add(paradaSalida)
+                .color(getRouteColor(TransportType.BUS))
+                .width(8f);*/
+        line = mapGoogle.addPolyline(lineOptions);
+
+
+        //drawVehicle(paradaSalida, TransportType.WALK, getRouteColor(TransportType.WALK));
+        drawParadaBus(paradaSalida, viaje.destino, viaje.linea, TransportType.WALK);
+        lineOptions = new PolylineOptions()
+                .add(paradaSalida)
+                .add(faculty.position)
+                .color(getRouteColor(TransportType.WALK))
+                .width(8f);
+        line = mapGoogle.addPolyline(lineOptions);
+    }
+
 
     private void startNavigation() {
         if (currentRoutePoints == null || currentRoutePoints.isEmpty()) {
@@ -794,9 +884,10 @@ public class MapFragment extends Fragment {
             case BUS:
                 offset = 0.002;
                 break;
+                /*
             case CAR:
                 offset = 0.0015;
-                break;
+                break;*/
         }
 
         // Modificar punto intermedio ligeramente
@@ -818,9 +909,9 @@ public class MapFragment extends Fragment {
             case BIKE:
                 return Color.GREEN;
             case BUS:
-                return Color.RED;
+                return Color.RED;/*
             case CAR:
-                return Color.YELLOW;
+                return Color.YELLOW;*/
             default:
                 return Color.GRAY;
         }
@@ -976,6 +1067,76 @@ public class MapFragment extends Fragment {
         }
     }
 
+    private Marker drawParadaBus(LatLng point, SimpleBusRouteFinder.Parada parada, SimpleBusRouteFinder.Linea linea, TransportType type)
+    {
+        if (!mapReady) return null;
+
+        int color = getRouteColor(type);
+        Marker ret = null;
+
+        try {
+            MarkerOptions markerOptions = new MarkerOptions()
+                    .icon(getBitmapFromVectorDrawable(getTransportIcon(type), color))
+                    .position(point);
+
+            ret = mapGoogle.addMarker(markerOptions);
+        } catch (Exception e) {
+            Log.e(TAG, "Error al dibujar vehículo: " + e.getMessage());
+            return null;
+        }
+
+        ret.setTag(parada.nombre + "<<<<>>>>" + linea.nombre);
+
+        mapGoogle.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener()
+        {
+            @Override
+            public boolean onMarkerClick(Marker clickedMarker) {
+                Object tag = clickedMarker.getTag();
+
+                // Lógica personalizada según el marker
+                if (tag != null && tag instanceof String)
+                {
+                    String texto = (String) tag;
+                    String[] partes = texto.split("<<<<>>>>");
+                    String parada = partes[0];
+                    String linea = partes[1];
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                    builder.setTitle(getContext().getString(R.string.linea) + ": " + linea);
+
+                    TextView aux = new TextView(getContext());
+
+
+                    TextView textViewParada = new TextView(getContext());
+                    textViewParada.setText("   " + getContext().getString(R.string.parada) + ": " + parada);
+
+                    LinearLayout layoutName = new LinearLayout(getContext());
+                    layoutName.setOrientation(LinearLayout.VERTICAL);
+
+                    layoutName.addView(aux);
+                    layoutName.addView(textViewParada);
+
+                    builder.setView(layoutName);
+
+                    builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which)
+                        {
+                            dialog.dismiss();
+                        }
+                    });
+
+                    builder.show();
+                }
+
+                return false; // true si manejas completamente el clic (para evitar el popup por defecto)
+            }
+        });
+
+
+        return ret;
+    }
+
     private int getTransportIcon(TransportType type) {
         switch (type) {
             default:
@@ -987,9 +1148,9 @@ public class MapFragment extends Fragment {
 
             case BUS:
                 return R.drawable.directions_bus_24px;
-
+/*
             case CAR:
-                return R.drawable.directions_car_24px;
+                return R.drawable.directions_car_24px;*/
         }
     }
 
