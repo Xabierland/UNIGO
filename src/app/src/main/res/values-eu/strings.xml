@@ -55,8 +55,9 @@
     <string name="nav_map">Mapa</string>
     <string name="nav_profile">Profila</string>
     <string name="nav_settings">Ezarpenak</string>
+
+    <!-- Perfil -->
     <string name="action_logout">Saioa itxi</string>
-    <string name="logout_title">Saioa itxi</string>
     <string name="logout_message">Ziur zaude saioa itxi nahi duzula?</string>
     <string name="anonymous_user">Erabiltzaile anonimoa</string>
 

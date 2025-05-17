@@ -261,7 +261,7 @@ public class MainActivity extends       BaseActivity
     public void logout() {
         // Mostrar diálogo de confirmación
         new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.logout_title)
+                .setTitle(R.string.action_logout)
                 .setMessage(R.string.logout_message)
                 .setPositiveButton(R.string.dialog_button_send, (dialog, which) -> {
                     // Cerrar sesión

@@ -1,6 +1,7 @@
 <resources>
     <!-- Cadenas de texto de la aplicacion base -->
     <string name="app_name">UNIGO</string>
+    
     <!-- Cadenas de texto de la pantalla de carga -->
     <string name="swipe_up_description">Desliza hacia arriba para continuar</string>
     <string name="logo_description">Logo de entidad</string>
@@ -55,10 +56,12 @@
     <string name="nav_map">Mapa</string>
     <string name="nav_profile">Perfil</string>
     <string name="nav_settings">Ajustes</string>
+
+    <!-- Perfil -->
     <string name="action_logout">Cerrar sesión</string>
-    <string name="logout_title">Cerrar sesión</string>
     <string name="logout_message">¿Estás seguro de que quieres cerrar sesión?</string>
     <string name="anonymous_user">Usuario anónimo</string>
+    <string name="profile_photo_description">Foto de perfil</string>
 
     <!-- Configuración -->
     <string name="settings_title">Ajustes</string>
