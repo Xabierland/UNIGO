@@ -2,18 +2,23 @@ package com.ehunzango.unigo.router;
 
 import android.util.Log;
 
-import com.ehunzango.unigo.router.adapters.NETEXAdapter;
-import com.ehunzango.unigo.router.entities.Line;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.checkerframework.checker.units.qual.A;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.xml.stream.XMLInputFactory;
@@ -25,6 +30,8 @@ public class SimpleBusRouteFinder
     private static SimpleBusRouteFinder instance;
 
     public boolean loaded = false;
+
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
     public static SimpleBusRouteFinder getInstance()
     {
@@ -74,7 +81,7 @@ public class SimpleBusRouteFinder
         public String id;
         public float latitud;
         public float longitud;
-        public float orden;
+        public int orden;
     }
 
     public class Viaje
@@ -97,6 +104,7 @@ public class SimpleBusRouteFinder
         Linea linea;
         String direccion;
         String display;
+        String idFecha;
         String idShape;
     }
 
@@ -147,6 +155,66 @@ public class SimpleBusRouteFinder
         double longitud;
     }
 
+    public class Fecha
+    {
+        String id;
+        String diaSemana;
+        ArrayList<DayOfWeek> dias;
+        String fechaInicio;
+        Date  inicio;
+        String fechaFin;
+        Date fin;
+
+        public void procesar() {
+            try
+            {
+                inicio = sdf.parse(fechaInicio);
+                fin = sdf.parse(fechaFin);
+            }
+            catch (Exception e)
+            {
+
+            }
+
+            ArrayList<String> diasSeparados = new ArrayList<>(List.of(diaSemana.split(" ")));
+
+            dias = new ArrayList<>();
+
+            for(String diaSemana : diasSeparados)
+            {
+                switch (diaSemana)
+                {
+                    case "Monday":
+                        dias.add(DayOfWeek.MONDAY);
+                        break;
+                    case "Tuesday":
+                        dias.add(DayOfWeek.TUESDAY);
+                        break;
+                    case "Wednesday":
+                        dias.add(DayOfWeek.WEDNESDAY);
+                        break;
+                    case "Thursday":
+                        dias.add(DayOfWeek.THURSDAY);
+                        break;
+                    case "Friday":
+                        dias.add(DayOfWeek.FRIDAY);
+                        break;
+                    case "Saturday":
+                        dias.add(DayOfWeek.SATURDAY);
+                        break;
+                    case "Sunday":
+                        dias.add(DayOfWeek.SUNDAY);
+                        break;
+
+                }
+            }
+
+
+
+
+        }
+    }
+
 
 
     public Viaje obtenerViaje(float latitudOrigen, float longitudOrigen, float latitudDestino, float longitudDestino)
@@ -180,23 +248,29 @@ public class SimpleBusRouteFinder
                         minimaDistanciaOrigen = distanciaActual;
                         paradaOrigen = parada;
                     }
+                }
 
-                    distanciaActual = calcularDistancia(latitudDestino, longitudDestino, parada);
+                Log.d("mitag", "\t orden origen : " + paradaOrigen.orden);
+                Log.d("mitag", "\t Buscando llegada...");
+                for (Parada parada : linea.paradas)
+                {
+                    float distanciaActual = calcularDistancia(latitudDestino, longitudDestino, parada);
                     if(distanciaActual < minimaDistanciaDestino)
                     {
                         minimaDistanciaDestino = distanciaActual;
                         paradaDestino = parada;
                     }
+
+                    if(minimaDistanciaOrigen + minimaDistanciaDestino < distanciaMasCorta)
+                    {
+                        Log.d("mitag", "Nueva distancia minima : " + (minimaDistanciaOrigen + minimaDistanciaDestino));
+                        distanciaMasCorta = minimaDistanciaOrigen + minimaDistanciaDestino;
+                        resultado.origen = paradaOrigen;
+                        resultado.destino = paradaDestino;
+                        resultado.linea = linea;
+                    }
                 }
 
-                if(minimaDistanciaOrigen + minimaDistanciaDestino < distanciaMasCorta)
-                {
-                    Log.d("mitag", "Nueva distancia minima : " + (minimaDistanciaOrigen + minimaDistanciaDestino));
-                    distanciaMasCorta = minimaDistanciaOrigen + minimaDistanciaDestino;
-                    resultado.origen = paradaOrigen;
-                    resultado.destino = paradaDestino;
-                    resultado.linea = linea;
-                }
             }
 
             Log.d("mitag", "Acabado : ");
@@ -227,7 +301,12 @@ public class SimpleBusRouteFinder
     {
         try
         {
+
             Log.d("mitag", "Cargando datos ...");
+
+            Map<String, Fecha> mapaFechas = loadFechas(path + "/calendar.xml");
+            Log.d("mitag", "Fechas cargados : " + mapaFechas.size());
+
             Map<String, Parada> mapaParadas = loadParadas(path + "/stops.xml");
             Log.d("mitag", "Paradas cargadas : " + mapaParadas.size());
 
@@ -242,6 +321,11 @@ public class SimpleBusRouteFinder
 
             Map<String, Dibujito> mapaShapes = loadShapes(path + "/shapes.xml");
             Log.d("mitag", "Dibujitos cargados : " + mapaShapes.size());
+
+            Date hoy = new Date();
+
+            LocalDate today = LocalDate.now();
+            DayOfWeek dayOfWeek = today.getDayOfWeek();
 
 
             ArrayList<String> lineasCargadas = new ArrayList<>();
@@ -264,12 +348,35 @@ public class SimpleBusRouteFinder
 
                 String idLineaActual = horario.idLinea;
 
-                //Log.d("mitag", "\t Linea : " + idLineaActual);
-
                 if(lineasCargadas.contains(idLineaActual))
                 {
                     continue;
                 }
+
+                String idFecha = horario.idFecha;
+                Fecha fechaActual = mapaFechas.get(idFecha);
+                if(fechaActual == null)
+                {
+                    //Log.d("mitag", "\t fechaActual == null : " + idFecha);
+                    continue;
+                }
+
+                if(fechaActual.dias == null || !fechaActual.dias.contains(dayOfWeek))
+                {
+                    Log.d("mitag", "\t dias == null || dia de la semana no valido");
+                    continue;
+                }
+
+
+                if (!(    hoy.equals(fechaActual.inicio) ||
+                        hoy.equals(fechaActual.fin) ||
+                        ((hoy.after(fechaActual.inicio) && hoy.before(fechaActual.fin)))
+                    ))
+                {
+                    Log.d("mitag", "\t Fuera de fecha");
+                    continue;
+                }
+
 
                 Linea lineaActual = mapaLineas.get(idLineaActual);
 
@@ -295,6 +402,8 @@ public class SimpleBusRouteFinder
                         lineaActual.paradas = new ArrayList<>();
                     }
                     lineaActual.paradas.add(parada);
+
+                    //lineaActual.paradas = new ArrayList<Parada>(lineaActual.paradas.stream().sorted(Comparator.comparingInt(st -> st.orden)).collect(Collectors.toList()));
                 }
 
                 Dibujito shapeActual = mapaShapes.get(horario.idShape);
@@ -303,7 +412,7 @@ public class SimpleBusRouteFinder
                     Log.d("mitag", "\t \t shapeActual == null ");
                 }
                 else
-                {
+                {/*
                     if(shapeActual.puntos != null)
                     {
                         Log.d("mitag", "\t \t shapeActual " + shapeActual.puntos.size() + " puntitos");
@@ -311,7 +420,7 @@ public class SimpleBusRouteFinder
                     else
                     {
                         Log.d("mitag", "\t \t shapeActual.puntos == null ");
-                    }
+                    }*/
 
                 }
                 lineaActual.dibujo = shapeActual;
@@ -330,11 +439,27 @@ public class SimpleBusRouteFinder
             }
 
             loaded = true;
+            if(lineas != null)
+            {
+                Log.d("mitag", "Pos cargado queda. Total " + lineas.size() + " lineas");
+            }
+            else
+            {
+                Log.d("mitag", "Pos cargado queda. Pero lineas==null");
+            }
+
         }
         catch (Exception e)
         {
             Log.d("mitag", "\t Excepcion :(");
-            Log.d("mitag", e.getMessage());
+            if(e.getMessage() != null)
+            {
+                Log.d("mitag", e.getMessage());
+            }
+            else {
+                Log.d("mitag", "e.getMessage() == null");
+            }
+
         }
 
     }
@@ -516,6 +641,13 @@ public class SimpleBusRouteFinder
                         else if (insideServiceJourney && "RouteView".equals(localName))
                         {
                             insideRouteView = true;
+                        }
+                        else if (insideServiceJourney && "DayTypeRef".equals(localName))
+                        {
+                            String id = reader.getAttributeValue(null, "id");
+                            id = id.replaceAll("DayType:", "");
+                            id = id.trim();
+                            horarioActual.idFecha = id;
                         }
                         else if (insideRouteView && "LinkSequenceProjectionRef".equals(localName))
                         {
@@ -740,6 +872,82 @@ public class SimpleBusRouteFinder
             }
             reader.close();
         }
+
+        return map;
+    }
+
+    private Map<String, Fecha> loadFechas(String filename) throws Exception
+    {
+        Map<String, Fecha> map = new HashMap<>();
+
+        XMLInputFactory factory = XMLInputFactory.newInstance();
+
+
+        try (InputStream in = new FileInputStream(filename))
+        {
+            XMLStreamReader reader = factory.createXMLStreamReader(in);
+
+            Fecha fechaActual = null;
+
+            boolean insideServiceCalendarFrame = false;
+
+            String currentElement = "";
+
+            while (reader.hasNext())
+            {
+                int event = reader.next();
+
+                switch (event)
+                {
+                    case XMLStreamConstants.START_ELEMENT:
+                        currentElement = reader.getLocalName();
+
+                        if ("ServiceCalendarFrame".equals(currentElement))
+                        {
+                            insideServiceCalendarFrame = true;
+                            fechaActual = new Fecha();
+
+                            String idFecha = reader.getAttributeValue(null, "id");
+
+                            idFecha = idFecha.replace("ServiceCalendarFrame:", "");
+                            idFecha = idFecha.trim();
+
+                            fechaActual.id = idFecha;
+                        }
+                        else if (insideServiceCalendarFrame && "DaysOfWeek".contains(currentElement))
+                        {
+                            fechaActual.diaSemana = (reader.getElementText());
+                        }
+                        else if (insideServiceCalendarFrame && "FromDate".equals(currentElement))
+                        {
+                            fechaActual.fechaInicio = (reader.getElementText());
+                        }
+                        else if (insideServiceCalendarFrame && "ToDate".equals(currentElement))
+                        {
+                            fechaActual.fechaFin = (reader.getElementText());
+                        }
+                        break;
+
+                    case XMLStreamConstants.END_ELEMENT:
+                        String endElement = reader.getLocalName();
+
+                        if ("ServiceCalendarFrame".equals(endElement))
+                        {
+                            insideServiceCalendarFrame = false;
+                            if (fechaActual != null)
+                            {
+                                fechaActual.procesar();
+                                map.put(fechaActual.id, fechaActual);
+                            }
+
+                            fechaActual = null;
+                        }
+                        break;
+                }
+            }
+            reader.close();
+        }
+
 
         return map;
     }
