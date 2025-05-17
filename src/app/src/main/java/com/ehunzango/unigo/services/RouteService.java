@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.ehunzango.unigo.router.RouteFinder;
 import com.ehunzango.unigo.router.adapters.IDataAdapter;
+import com.ehunzango.unigo.router.adapters.NETEXAdapter;
 import com.ehunzango.unigo.router.adapters.SHPAdapter;
 import com.ehunzango.unigo.router.entities.Line;
 import com.ehunzango.unigo.router.utils.FetchUtil;
@@ -33,6 +34,7 @@ public class RouteService {
 
     private static RouteService instance;
     private final List<Line> lines = new ArrayList<>();
+    private final List<Line> linesBus = new ArrayList<>();
     private boolean dataLoaded = false;
 
     // Interfaz para callbacks
@@ -133,6 +135,19 @@ public class RouteService {
                 Log.d(TAG, String.format("size: %d", this.lines.size()));
                 Log.d(TAG, "=====================================");
 
+
+                NETEXAdapter adapter = new NETEXAdapter();
+                // Marcar como completado con éxito
+                dataLoaded = false;
+                fullPath = new File(context.getFilesDir(), RouteService.TUVISA_UNZIP_DIR).getAbsolutePath();
+                dataLoaded = adapter.load(fullPath, this.linesBus);
+
+                Log.d(TAG, "=====================================");
+                Log.d(TAG, "DATA LOADED!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                Log.d(TAG, String.format("size: %d", this.linesBus.size()));
+                Log.d(TAG, "=====================================");
+
+
                 // Notificar éxito en el hilo principal
                 if (callback != null) {
                     Handler mainHandler = new Handler(context.getMainLooper());
@@ -160,6 +175,14 @@ public class RouteService {
     public List<Line> getLines() {
         return lines;
     }
+
+    public List<Line> getBusLines()
+    {
+        return linesBus;
+    }
+
+
+
     
     /**
      * Comprueba si los datos están cargados

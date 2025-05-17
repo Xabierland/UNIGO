@@ -1,10 +1,13 @@
 package com.ehunzango.unigo.router.adapters;
 
+import android.util.Log;
+
 import com.ehunzango.unigo.router.entities.Line;
 import com.ehunzango.unigo.router.entities.Node;
 import com.opencsv.bean.*;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -14,6 +17,10 @@ import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Persister;
+
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamReader;
 
 import kotlin.text.UStringsKt;
 
@@ -31,30 +38,24 @@ public class NETEXAdapter implements IDataAdapter
         try {
             // Listo
             Map<String, Stop> stopMap = loadStops(path + "/stops.xml");
+            Log.d("mitag", "loadStops acabado " + stopMap.size());
             Map<String, Route> routeMap = loadRoutes(path + "/routes.xml");
+            Log.d("mitag", "loadRoutes acabado " + routeMap.size());
             Map<String, Trip> tripMap = loadTrips(path + "/trips.xml");
+            Log.d("mitag", "loadTrips acabado " + tripMap.size());
             Map<String, List<StopTime>> stopTimeMap = loadStopTimes(path + "/stop_times.xml");
-
-            System.out.println("stop count:     " + stopMap.size());
-            System.out.println("route count:    " + routeMap.size());
-            System.out.println("trip count:     " + tripMap.size());
-            System.out.println("stopTime count: " + stopTimeMap.size());
-
-            int i = 0;
-            for (Trip trip : tripMap.values())
-            {
-                i++;
-                if (trip.route_id == null) {
-                    System.out.println("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFf: " + i);
-                    return false;
-                }
-            }
+            Log.d("mitag", "stopTimeMap acabado " + stopTimeMap.size());
 
             Map<String, CoolRoute> coolRoutes = parseRoutes(routeMap, stopTimeMap, tripMap);
+            Log.d("mitag", "coolRoutes parseado " + coolRoutes.size());
             NETEXAdapter.generateEntities(lines, coolRoutes, stopMap);
+            Log.d("mitag", "lines generadas " + lines.size());
 
             return true;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
+            Log.d("mitag", "Excepcion :( ");
             e.printStackTrace();
             return false;
         }
@@ -121,16 +122,32 @@ public class NETEXAdapter implements IDataAdapter
         }
     }
 
-    private Map<String, CoolRoute> parseRoutes(
-            Map<String, Route> routeMap,
-            Map<String, List<StopTime>> stopTimeMap,
-            Map<String, Trip> tripMap
-    ) throws Exception {
+    private Map<String, CoolRoute> parseRoutes(Map<String, Route> routeMap, Map<String, List<StopTime>> stopTimeMap, Map<String, Trip> tripMap) throws Exception
+    {
         Map<String, CoolRoute> coolRouteMap = new HashMap<>();
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
 
+        int i = 0;
         // Iterate through the Route map to create CoolRoute objects
-        for (Route route : routeMap.values()) {
+        Log.d("mitag", "pre");
+
+        Log.d("mitag", "\t Collection ... ");
+        Collection<Trip> tripList = tripMap.values();
+        Log.d("mitag", "\t Array ... ");
+        Trip[] tripArray = tripList.toArray(new Trip[0]);
+        Log.d("mitag", "\t ArrayList ... ");
+        ArrayList<Trip> trips = new ArrayList<>(Arrays.asList(tripArray));
+
+        for (Route route : routeMap.values())
+        {
+            Log.d("mitag", "Ruta número " +  i);
+            i++;
+
+            if(i > 11)
+            {
+                continue;
+            }
+
             String routeId = route.route_id;
             String routeShortName = route.route_short_name;
             int routeType = route.route_type;
@@ -142,38 +159,79 @@ public class NETEXAdapter implements IDataAdapter
             coolRoute.start_dates = new ArrayList<>();
 
             // Collect StopTimes for trips that belong to this route
-            for (Trip trip : tripMap.values()) {
-                if (!trip.route_id.equals(routeId)) continue;
+            Log.d("mitag", "\t Recorriendo trips ... " + trips.size() + " ");
+
+            Trip trip = null;
+
+            int aaaaaaaaaa = 0;
+            int tripCount = 0;
+            while (tripCount < trips.size())
+            {
+                aaaaaaaaaa += 1;
+                if(aaaaaaaaaa%500 == 0)
+                {
+                    Log.d("mitag", "\t \t" + aaaaaaaaaa);
+                }
+
+                trip = trips.get(tripCount);
+
+                if (!trip.route_id.equals(routeId))
+                {
+                    //Log.d("mitag", "\t \t No " + trip.route_id + " != " + routeId);
+                    tripCount++;
+                    continue;
+                }
+                else
+                {
+                    //Log.d("mitag", "\t \t A");
+                    trips.remove(trip);
+                }
 
                 List<StopTime> stopTimes = stopTimeMap.get(trip.trip_id);
-                if (stopTimes == null || stopTimes.isEmpty()) continue;
+                if (stopTimes == null || stopTimes.isEmpty())
+                {
+                    //Log.d("mitag", "\t \t stopTimes == null ||  stopTimes.isEmpty()");
+                    continue;
+                }
 
+
+                //Log.d("mitag", "\t \t coolRoute.stop_times.addAll(stopTimes);...");
                 coolRoute.stop_times.addAll(stopTimes);
-
+                //Log.d("mitag", "\t \t ...ok");
 
                 // Step 1: Calculate the start dates (based on your calendar data, if available)
                 // For simplicity, let's assume we are extracting start dates directly from StopTime arrival_time
+                //Log.d("mitag", "\t \t arrival_time " + stopTimes.get(0).arrival_time);
                 Date startTime = timeFormat.parse(stopTimes.get(0).arrival_time);
+                //Log.d("mitag", "\t \t timeFormat.parse(stopTimes.get(0).arrival_time);");
                 coolRoute.start_dates.add(startTime);
+                //Log.d("mitag", "\t \t coolRoute.start_dates.add(startTime);");
 
                 // Step 2: Calculate the deltas (time differences between consecutive stops)
                 List<Float> deltas = new ArrayList<>();
                 deltas.add(0.0f);
                 Date previousTime = null;
-                for (StopTime st : coolRoute.stop_times) {
+
+
+                for (StopTime st : coolRoute.stop_times)
+                {
+
+                    //Log.d("mitag", "\t \t \t st");
                     Date arrivalTime = timeFormat.parse(st.arrival_time);
 
-                    if (previousTime != null) { // Calculate the delta
+                    if (previousTime != null)
+                    { // Calculate the delta
                         long deltaMillis = arrivalTime.getTime() - previousTime.getTime();
                         deltas.add(deltaMillis / 1000f);  // Convert milliseconds to seconds
+                        //Log.d("mitag", "\t \t \t " + deltaMillis / 1000f / 60f);
                     }
                     previousTime = arrivalTime;
                 }
                 coolRoute.deltas = deltas;
-
-                // Add the CoolRoute to the result map
-                coolRouteMap.put(routeId, coolRoute);
             }
+            // Add the CoolRoute to the result map
+            coolRouteMap.put(routeId, coolRoute);
+            Log.d("mitag", "\t Añadida ");
         }
 
         return coolRouteMap;
@@ -233,6 +291,101 @@ public class NETEXAdapter implements IDataAdapter
 
     private Map<String, Trip> loadTrips(String filename) throws Exception
     {
+        Map<String, Trip> map = new HashMap<>();
+
+        XMLInputFactory factory = XMLInputFactory.newInstance();
+        try (InputStream in = new FileInputStream(filename))
+        {
+            XMLStreamReader reader = factory.createXMLStreamReader(in);
+
+            Trip currentTrip = null;
+            boolean insideServiceJourney = false;
+            boolean insideRouteView = false;
+
+            while (reader.hasNext())
+            {
+                int event = reader.next();
+
+                switch (event)
+                {
+                    case XMLStreamConstants.START_ELEMENT:
+                        String localName = reader.getLocalName();
+
+                        if ("ServiceJourney".equals(localName))
+                        {
+                            insideServiceJourney = true;
+                            currentTrip = new Trip();
+                            currentTrip.trip_id = reader.getAttributeValue(null, "id");
+
+                            currentTrip.trip_id = currentTrip.trip_id.trim();
+                            //Log.d("mitag", currentTrip.trip_id);
+                            //currentTrip.trip_id = (currentTrip.trip_id.length() > 1) ? currentTrip.trip_id.substring(0, currentTrip.trip_id.length() - 1) : currentTrip.trip_id;
+                            //Log.d("mitag", currentTripId);
+
+                        }
+                        else if (insideServiceJourney && "LineRef".equals(localName))
+                        {
+                            String id = reader.getAttributeValue(null, "ref");
+                            //Log.d("mitag", id);
+                            id = id.trim();
+                            if(id != null && id.length() > 1)
+                            {
+                                String recorte = id.substring(id.length() - 1);
+                                //Log.d("mitag", "\t recorte[" + recorte + "]");
+                                if(recorte.equals(":"))
+                                {
+                                    id = id.substring(0, id.length() -1);
+                                }
+                            }
+
+                            //Log.d("mitag", "\t" + id);
+                            currentTrip.route_id = id;
+                            //Log.d("mitag", currentTrip.trip_id);
+                            //currentTrip.route_id = (currentTrip.trip_id.length() > 1) ? currentTrip.trip_id.substring(0, currentTrip.trip_id.length() - 1) : currentTrip.trip_id;
+
+
+                        }
+                        else if (insideServiceJourney && "RouteView".equals(localName))
+                        {
+                            insideRouteView = true;
+                            //currentTrip.routeView = new RouteViewTripsXML();
+
+                        }
+                        else if (insideRouteView && "LinkSequenceProjectionRef".equals(localName))
+                        {
+                            currentTrip.shape_id = reader.getAttributeValue(null, "ref");
+                        }
+                        break;
+
+                    case XMLStreamConstants.END_ELEMENT:
+                        String endName = reader.getLocalName();
+
+                        if ("RouteView".equals(endName))
+                        {
+                            insideRouteView = false;
+
+                        }
+                        else if ("ServiceJourney".equals(endName))
+                        {
+                            map.put(currentTrip.trip_id, currentTrip);
+                            insideServiceJourney = false;
+                            currentTrip = null;
+                        }
+                        break;
+                }
+            }
+
+            reader.close();
+        }
+
+        return map;
+
+
+
+
+
+
+        /*
         Persister serializer = new Persister();
         File file = new File(filename);
 
@@ -250,12 +403,132 @@ public class NETEXAdapter implements IDataAdapter
                 map.put(t.trip_id, t);
             }
         }
-        return map;
+        return map;*/
     }
 
     private Map<String, List<StopTime>> loadStopTimes(String filename) throws Exception
     {
+        Map<String, List<StopTime>> map = new HashMap<>();
 
+        XMLInputFactory factory = XMLInputFactory.newInstance();
+        try (InputStream in = new FileInputStream(filename))
+        {
+            XMLStreamReader reader = factory.createXMLStreamReader(in);
+
+            String currentTripId = null;
+            List<StopTime> currentStopTimes = null;
+            StopTime currentStopTime = null;
+            boolean insideServiceJourney = false;
+            boolean insideCalls = false;
+            boolean insideCall = false;
+            boolean insideArrival = false;
+            boolean insideDeparture = false;
+            String currentElement = "";
+
+            while (reader.hasNext())
+            {
+                int event = reader.next();
+
+                switch (event)
+                {
+                    case XMLStreamConstants.START_ELEMENT:
+                        currentElement = reader.getLocalName();
+
+                        if ("ServiceJourney".equals(currentElement))
+                        {
+                            insideServiceJourney = true;
+                            currentTripId = reader.getAttributeValue(null, "id");
+                            currentTripId = currentTripId.trim();
+                            //Log.d("mitag", currentTripId);
+                            //currentTripId = (currentTripId.length() > 1) ? currentTripId.substring(0, currentTripId.length() - 1) : currentTripId;
+                            //Log.d("mitag", currentTripId);
+                            currentStopTimes = new ArrayList<>();
+                        }
+                        else if (insideServiceJourney && "calls".equals(currentElement))
+                        {
+                            insideCalls = true;
+                        }
+                        else if (insideCalls && "Call".equals(currentElement))
+                        {
+                            insideCall = true;
+                            currentStopTime = new StopTime();
+                            currentStopTime.trip_id = currentTripId;
+                            String order = reader.getAttributeValue(null, "order");
+                            if (order != null) {
+                                currentStopTime.stop_sequence = Integer.parseInt(order);
+                            }
+                        }
+                        else if (insideCall && "ScheduledStopPointRef".equals(currentElement))
+                        {
+                            String ref = reader.getAttributeValue(null, "ref");
+                            if (ref != null) {
+                                currentStopTime.stop_id = ref;
+                            }
+                        }
+                        else if (insideCall && "Time".equals(currentElement))
+                        {
+                            String time = reader.getElementText();
+                            if (insideArrival)
+                            {
+                                currentStopTime.arrival_time = time;
+                            } else if (insideDeparture)
+                            {
+                                currentStopTime.departure_time = time;
+                            }
+                        }
+                        else if (insideCall && "Arrival".equals(currentElement))
+                        {
+                            insideArrival = true;
+                        }
+                        else if (insideCall && "Departure".equals(currentElement))
+                        {
+                            insideDeparture = true;
+                        }
+                        break;
+
+                    case XMLStreamConstants.END_ELEMENT:
+                        String endElement = reader.getLocalName();
+
+                        if ("Call".equals(endElement) && insideCall)
+                        {
+                            currentStopTimes.add(currentStopTime);
+                            insideCall = false;
+                            currentStopTime = null;
+                        }
+                        else if ("calls".equals(endElement))
+                        {
+                            insideCalls = false;
+                        }
+                        else if ("Arrival".equals(currentElement))
+                        {
+                            insideArrival = false;
+                        }
+                        else if ("Departure".equals(currentElement))
+                        {
+                            insideDeparture = false;
+                        }
+                        else if ("ServiceJourney".equals(endElement))
+                        {
+                            if (currentTripId != null && currentStopTimes != null)
+                            {
+                                currentStopTimes.sort(Comparator.comparingInt(st -> st.stop_sequence));
+                                map.put(currentTripId, currentStopTimes);
+                            }
+                            insideServiceJourney = false;
+                            currentTripId = null;
+                            currentStopTimes = null;
+                        }
+                        break;
+                }
+            }
+
+            reader.close();
+        }
+
+        return map;
+
+
+/*
         Persister serializer = new Persister();
         File file = new File(filename);
 
@@ -289,9 +562,8 @@ public class NETEXAdapter implements IDataAdapter
 
         map.values().forEach(list -> list.sort(Comparator.comparingInt(stop -> stop.stop_sequence)));
 
-        return map;
+        return map;*/
     }
-
 
 
     public static void printObjectFields(Object obj) {
@@ -308,9 +580,6 @@ public class NETEXAdapter implements IDataAdapter
             }
         }
     }
-
-
-
 
 
     private Map<String, Calendar> loadCalendar(String filename) throws Exception {
@@ -508,6 +777,8 @@ public class NETEXAdapter implements IDataAdapter
         //public List<Route> routes;
     }
      */
+
+    /*
     @Root(name = "PublicationDelivery", strict = false)
     public static class PublicationDeliveryTripsXML { // trips.xml
         public PublicationDeliveryTripsXML() {
@@ -550,32 +821,32 @@ public class NETEXAdapter implements IDataAdapter
         //public VehicleJourneysTripsXML vehicleJourneys;
     }
 
-    @Root(name = "vehicleJourneys", strict = false)
+    @Root(name = "vehicleJourneys", strict = false)*/
     public static class Trip { // trips.xml
         public Trip() {
         }
 
-        @Element(name = "LineRef", required = false)
+        //@Element(name = "LineRef", required = false)
         public String route_id;
 
         public String service_id;
-
+/*
         @Element(name = "RouteView", required = false)
-        public RouteViewTripsXML routeView;
+        public RouteViewTripsXML routeView;*/
 
-        @org.simpleframework.xml.Attribute(name = "id")
+        //@org.simpleframework.xml.Attribute(name = "id")
         public String trip_id;
 
-        @Element(name = "JourneyPatternRef", required = false)
+        //@Element(name = "JourneyPatternRef", required = false)
         public String shape_id;
 
-
+/*
         public void cargar()
         {
             shape_id = routeView.shape_id;
-        }
+        }*/
     }
-
+/*
     @Root(name = "RouteView", strict = false)
     public static class RouteViewTripsXML { // trips.xml
         public RouteViewTripsXML() {
@@ -584,7 +855,7 @@ public class NETEXAdapter implements IDataAdapter
         @Element(name = "LinkSequenceProjectionRef", required = false)
         public String shape_id;
 
-    }
+    }*/
 
     // STOPTIME -----------------------------------------------------------------------------
     /*
@@ -695,8 +966,8 @@ public class NETEXAdapter implements IDataAdapter
         @org.simpleframework.xml.Attribute(name = "order")
         public int order;
 
-        @Element(name = "ScheduledStopPointRef")
-        public String stop_id;
+        @Element(name = "ScheduledStopPointRef", required = false)
+        public String stop_id = "";
 
         public String arrival_time;
         public String departure_time;

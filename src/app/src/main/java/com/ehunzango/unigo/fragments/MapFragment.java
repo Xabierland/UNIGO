@@ -705,14 +705,37 @@ public class MapFragment extends Fragment {
     }
 
     private final RouteFinder rf = new RouteFinder();
-    private ArrayList<LatLng> createRoutePoints(LatLng start, LatLng end, TransportType transportType) {
+    private ArrayList<LatLng> createRoutePoints(LatLng start, LatLng end, TransportType transportType)
+    {
+
+
+
+
         ArrayList<LatLng> routePoints = new ArrayList<>();
 
-        List<Line> lines = RouteService.getInstance()
-                .getLines()
-                .stream()
-                .filter(line -> line.type == Line.Type.BIKE) // TODO: change this bs
-                .collect(Collectors.toList());
+        List<Line> lines = null;
+
+        if (transportType == TransportType.BIKE)
+        {
+            Log.d(TAG, "BIKE");
+            lines = RouteService.getInstance()
+                    .getLines()
+                    .stream()
+                    .filter(line -> line.type == Line.Type.BIKE) // TODO: change this bs
+                    .collect(Collectors.toList());
+        } else if (transportType == TransportType.BUS)
+        {
+            Log.d(TAG, "BUS");
+            lines = RouteService.getInstance()
+                    .getBusLines();
+            Log.d(TAG, String.format("size: %d", lines.size()));
+            lines = lines.stream()
+                    .filter(line -> line.type == Line.Type.BUS) // TODO: change this bs
+                    .collect(Collectors.toList());
+
+
+        }
+
 
         if (transportType != TransportType.BIKE || lines.isEmpty()) {
             Log.d(TAG, "FALL (1) BACK FUCK");
