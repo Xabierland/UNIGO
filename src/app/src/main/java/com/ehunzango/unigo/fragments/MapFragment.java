@@ -231,9 +231,6 @@ public class MapFragment extends Fragment {
                         Marker m = mapGoogle.addMarker(faculty.getMarkerOptions());
                         faculty.marker = m;
                     }
-
-                    // Dibujar ruta de prueba para verificar que se puede dibujar
-                    drawTestRoute();
                 }
             });
         } else {
@@ -304,23 +301,27 @@ public class MapFragment extends Fragment {
                     // Actualizar posición del usuario
                     userPosition = new LatLng(location.getLatitude(), location.getLongitude());
 
-                    // Si estamos en modo navegación, actualizar la posición en el mapa
-                    if (isInNavigationMode && mapReady) {
+                    // Actualizar la posición del marcador sin centrar el mapa
+                    if (mapReady) {
                         updateUserPositionOnMap();
-                        mapGoogle.animateCamera(CameraUpdateFactory.newLatLngZoom(userPosition, 18f));
+                        
+                        // Solo centrar el mapa si estamos en modo navegación
+                        if (isInNavigationMode) {
+                            mapGoogle.animateCamera(CameraUpdateFactory.newLatLngZoom(userPosition, 18f));
 
-                        // Si estamos cerca del destino, finalizar la navegación
-                        if (currentRoutePoints != null && !currentRoutePoints.isEmpty()) {
-                            LatLng destination = currentRoutePoints.get(currentRoutePoints.size() - 1);
-                            float[] results = new float[1];
-                            Location.distanceBetween(
-                                    userPosition.latitude, userPosition.longitude,
-                                    destination.latitude, destination.longitude,
-                                    results);
+                            // Si estamos cerca del destino, finalizar la navegación
+                            if (currentRoutePoints != null && !currentRoutePoints.isEmpty()) {
+                                LatLng destination = currentRoutePoints.get(currentRoutePoints.size() - 1);
+                                float[] results = new float[1];
+                                Location.distanceBetween(
+                                        userPosition.latitude, userPosition.longitude,
+                                        destination.latitude, destination.longitude,
+                                        results);
 
-                            if (results[0] < 50) { // 50 metros del destino
-                                Toast.makeText(getContext(), "¡Has llegado a tu destino!", Toast.LENGTH_LONG).show();
-                                stopNavigation();
+                                if (results[0] < 50) { // 50 metros del destino
+                                    Toast.makeText(getContext(), "¡Has llegado a tu destino!", Toast.LENGTH_LONG).show();
+                                    stopNavigation();
+                                }
                             }
                         }
                     }
@@ -1038,31 +1039,41 @@ public class MapFragment extends Fragment {
     private void stopNavigation() {
         isInNavigationMode = false;
 
-        // Restaurar UI normal
+        // Restaurar UI normal y ocultar el botón
         startNavigationButton.setImageResource(R.drawable.navigation_24px);
         startNavigationButton.setOnClickListener(v -> startNavigation());
+        startNavigationButton.setVisibility(View.GONE); // Ocultar el botón
 
         // Detener actualizaciones frecuentes de ubicación
         stopLocationUpdates();
 
         if (mapReady) {
-            // Borrar la ruta actual
+            // Borrar la ruta actual pero mantener los marcadores
             if (currentRoute != null) {
                 currentRoute.remove();
                 currentRoute = null;
             }
-
-            // Recalcular la ruta (opcional)
-            if (selectedFaculty != null && selectedTransport != null && userPosition != null) {
-                FacultyInfo faculty = facultyHashMap.get(selectedFaculty);
-                if (faculty != null) {
-                    // Redibujar la ruta con un color más tenue o con menos opacidad
-                    ArrayList<LatLng> points = createRoutePoints(userPosition, faculty.position, selectedTransport);
-                    int routeColor = adjustColorAlpha(getRouteColor(selectedTransport), 128); // 50% de opacidad
-                    currentRoute = drawRoute(points, routeColor);
-
-                    // Mostrar toda la ruta
-                    zoomToShowRoute(points);
+            
+            // No reconstruir ninguna ruta, solo mantener los marcadores existentes
+            // y asegurarnos de que la vista del mapa sea adecuada
+            if (userPosition != null) {
+                // Ajustar zoom para mostrar tanto al usuario como a la facultad destino
+                if (selectedFaculty != null) {
+                    FacultyInfo faculty = facultyHashMap.get(selectedFaculty);
+                    if (faculty != null) {
+                        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                        builder.include(userPosition);
+                        builder.include(faculty.position);
+                        
+                        try {
+                            mapGoogle.animateCamera(CameraUpdateFactory.newLatLngBounds(
+                                builder.build(), 150));  // 150px de padding
+                        } catch (Exception e) {
+                            // En caso de error, solo centrar en el usuario
+                            mapGoogle.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                                userPosition, 15f));
+                        }
+                    }
                 }
             }
         }
@@ -1119,43 +1130,39 @@ public class MapFragment extends Fragment {
     }
 
     private final RouteFinder rf = new RouteFinder();
-    private ArrayList<LatLng> createRoutePoints(LatLng start, LatLng end, TransportType transportType)
-    {
 
-
-
-
+    private ArrayList<LatLng> createRoutePoints(LatLng start, LatLng end, TransportType transportType) {
         ArrayList<LatLng> routePoints = new ArrayList<>();
-
         List<Line> lines = null;
 
-        if (transportType == TransportType.BIKE)
-        {
+        if (transportType == TransportType.BIKE) {
             Log.d(TAG, "BIKE");
             lines = RouteService.getInstance()
                     .getLines()
                     .stream()
                     .filter(line -> line.type == Line.Type.BIKE) // TODO: change this bs
                     .collect(Collectors.toList());
-        } else if (transportType == TransportType.BUS)
-        {
+        } else if (transportType == TransportType.BUS) {
             Log.d(TAG, "BUS");
             lines = RouteService.getInstance()
                     .getBusLines();
-            Log.d(TAG, String.format("size: %d", lines.size()));
-            lines = lines.stream()
-                    .filter(line -> line.type == Line.Type.BUS) // TODO: change this bs
-                    .collect(Collectors.toList());
-
-
+            Log.d(TAG, String.format("size: %d", lines != null ? lines.size() : 0));
+            if (lines != null) {
+                lines = lines.stream()
+                        .filter(line -> line.type == Line.Type.BUS) // TODO: change this bs
+                        .collect(Collectors.toList());
+            }
         }
 
-
-        if (transportType != TransportType.BIKE || lines.isEmpty()) {
+        // Verificar si lines es null además de comprobar si está vacío
+        if (transportType != TransportType.BIKE || lines == null || lines.isEmpty()) {
             Log.d(TAG, "FALL (1) BACK FUCK");
             Log.d(TAG, transportType.toString());
-            Log.d(TAG, String.format("size: %d", lines.size()));
-            Log.d(TAG, String.format("size: %d", RouteService.getInstance().getLines().size()));
+            Log.d(TAG, String.format("lines is null: %b", lines == null));
+            if (lines != null) {
+                Log.d(TAG, String.format("size: %d", lines.size()));
+            }
+            Log.d(TAG, String.format("RouteService lines size: %d", RouteService.getInstance().getLines().size()));
             return createRoutePointsFallBack(start, end, transportType);
         }
 

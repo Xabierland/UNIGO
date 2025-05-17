@@ -1,12 +1,17 @@
 package com.ehunzango.unigo.activities;
 
+import android.Manifest;
 import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -15,8 +20,12 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.LinearInterpolator;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
+import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GestureDetectorCompat;
 
 import com.ehunzango.unigo.R;
@@ -34,6 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class SplashActivity extends BaseActivity {
 
     private static final String TAG = "SplashActivity";
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 31;
     private CardView centerCircle;
     private ImageView[] logos; // Array para todos los logos
     private static final int LOGO_TYPES = 3; // Tipos de logos (opendata, ehu, ehunzango)
@@ -86,6 +96,9 @@ public class SplashActivity extends BaseActivity {
         // Llamar a initViews después de setContentView para que las vistas ya estén infladas
         initViews();
 
+        // Solicitar permisos de ubicación
+        checkLocationPermission();
+
         // Inicializar servicio de rutas
         RouteService routeService = RouteService.getInstance();
         routeService.initialize(this, new RouteService.RouteCallback() {
@@ -102,6 +115,61 @@ public class SplashActivity extends BaseActivity {
 
         // Iniciar verificación de autenticación
         checkAuthentication();
+    }
+
+    private boolean checkLocationPermission() {
+        // Si el permiso está concedido
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Permiso de ubicación ya concedido");
+            return true;
+        }
+        
+        // Si ya se ha solicitado el permiso anteriormente, pero el usuario lo ha rechazado
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Se requieren permisos de ubicación");
+            builder.setMessage("Para mostrar tu ubicación en el mapa y calcular rutas, necesitamos acceso a tu ubicación.");
+            
+            LinearLayout layoutName = new LinearLayout(getBaseContext());
+            layoutName.setOrientation(LinearLayout.VERTICAL);
+            
+            builder.setView(layoutName);
+            
+            builder.setPositiveButton("Abrir ajustes", (dialog, which) -> {
+                dialog.dismiss();
+                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                Uri uri = Uri.fromParts("package", getPackageName(), null);
+                intent.setData(uri);
+                startActivity(intent);
+            });
+            
+            builder.setNegativeButton("Cancelar", (dialog, which) -> {
+                dialog.dismiss();
+            });
+            
+            builder.show();
+        } else {
+            // Solicitar permiso directamente
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE
+            );
+        }
+        return false;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Permiso de ubicación concedido");
+            } else {
+                Log.d(TAG, "Permiso de ubicación denegado");
+            }
+        }
     }
 
     @Override
