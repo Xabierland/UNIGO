@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.ehunzango.unigo.router.entities.Line;
 import com.ehunzango.unigo.router.entities.Node;
+import com.ehunzango.unigo.router.utils.UTMToWGS84;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -153,10 +154,12 @@ public class SHPAdapter implements IDataAdapter {
             }
 
             // Leer longitud del archivo
-            headerBuffer.order(ByteOrder.LITTLE_ENDIAN);
+            headerBuffer.order(ByteOrder.BIG_ENDIAN);
             int fileLength = headerBuffer.getInt(24) * 2;
+            Log.d(TAG, String.format("file len: %d", fileLength));
             
             // Verificar tipo de forma
+            headerBuffer.order(ByteOrder.LITTLE_ENDIAN);
             int shapeType = headerBuffer.getInt(32);
             if (shapeType != SHP_SHAPE_TYPE_POLYLINE) {
                 Log.w(TAG, "El archivo SHP contiene tipo " + shapeType + ", se esperaba PolyLine (3)");
@@ -174,10 +177,12 @@ public class SHPAdapter implements IDataAdapter {
                 position += 8;
                 
                 ByteBuffer recordHeaderBuffer = ByteBuffer.wrap(recordHeaderBytes);
-                recordHeaderBuffer.order(ByteOrder.BIG_ENDIAN);
 
                 // NOTE: we don't check for Record Number (I hope it doesn't matter)
+                recordHeaderBuffer.order(ByteOrder.BIG_ENDIAN);
+                int recordNumber = recordHeaderBuffer.getInt(0);
                 int contentLength = recordHeaderBuffer.getInt(4) * 2;
+                Log.d(TAG, String.format("record: %d -> size: %d", recordNumber, contentLength));
                 
                 // Leer contenido del registro
                 byte[] recordContentBytes = new byte[contentLength];
@@ -187,9 +192,9 @@ public class SHPAdapter implements IDataAdapter {
                 position += contentLength;
                 
                 ByteBuffer recordContentBuffer = ByteBuffer.wrap(recordContentBytes);
-                recordContentBuffer.order(ByteOrder.LITTLE_ENDIAN);
-                
+
                 // Verificar tipo de registro
+                recordContentBuffer.order(ByteOrder.LITTLE_ENDIAN);
                 int recordShapeType = recordContentBuffer.getInt(0);
                 if (recordShapeType == SHP_SHAPE_TYPE_POLYLINE) {
                     // Número de partes y puntos
@@ -208,8 +213,12 @@ public class SHPAdapter implements IDataAdapter {
                     int pointsOffset = 44 + numParts * 4;
                     for (int i = 0; i < numPoints; i++) {
                         int pos = pointsOffset + i * 16;
-                        allPoints[i][0] = recordContentBuffer.getDouble(pos); // X (longitud)
-                        allPoints[i][1] = recordContentBuffer.getDouble(pos + 8); // Y (latitud)
+                        allPoints[i] = UTMToWGS84.convert(
+                                recordContentBuffer.getDouble(pos), // X (longitud)
+                                recordContentBuffer.getDouble(pos + 8), // Y (latitud)
+                                30,
+                                true
+                        );
                     }
                     
                     // Crear una lista para cada parte

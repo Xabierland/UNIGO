@@ -20,7 +20,8 @@ public class RouteFinder {
     //       fetch all the walks between nodes and make it "independent" from fetching stuff for
     //       public transport data)
     private final static float WALK_SPEED = 1.0f / 1.3f; // seconds / meters
-    private final static float OTHER_TRANSPORT_SPEED = WALK_SPEED / 40; // seconds / meters
+    private final static float OTHER_TRANSPORT_SPEED = WALK_SPEED / 400; // seconds / meters
+    private final static String TAG = "RouteFinder";
 
     private final DistanceCache distanceCache = new DistanceCache();
 
@@ -48,6 +49,12 @@ public class RouteFinder {
         Map<Node, Float> dist = new HashMap<>();
         Map<Node, Node> prev = new HashMap<>();
 
+        Log.d(TAG, String.format("number of lines: %d", allLines.size()));
+        int i = 0;
+        for (Node node: allLines.get(0).node_list) {
+            Log.d(TAG, String.format("[%d]: %s", i++, node.toString()));
+        }
+
         dist.put(start, 0.0f);
         queue.add(new Step(start, 0.0f));
 
@@ -68,7 +75,7 @@ public class RouteFinder {
 
             // 1. Move forward on the same line
             if (index + 1 < currNode.line.node_list.size()) {
-                // NOTE: remember that bidirectional lines are splited into 2 individual lines :)
+                // NOTE: remember that bidirectional lines are split into 2 individual lines :)
                 Node next = currNode.line.node_list.get(index + 1);
                 float delta = currNode.line.deltas.get(index) * OTHER_TRANSPORT_SPEED; // cost from curr -> next
                 float heuristic = (float)next.fast_manhattan(goal); // hcost from next -> goal
@@ -140,11 +147,11 @@ public class RouteFinder {
         }
         int i = 0;
         StringBuilder sb = new StringBuilder();
-        sb.append("------------------------------------------");
+        sb.append("------------------------------------------\n");
         for (Node node: path) {
             sb.append(String.format("\t[%d]: %s\n", i, node));
         }
-        sb.append("------------------------------------------");
+        sb.append("------------------------------------------\n");
         Log.d("RouteFinder", "path\n" + sb.toString());
         return path;
     }
