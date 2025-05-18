@@ -693,7 +693,7 @@ public class MapFragment extends Fragment {
             currentRoutePoints = createRoutePoints(userPosition, faculty.position, selectedTransport);
         }
 
-        int routeColor = getRouteColor(selectedTransport);
+        int routeColor = getTransportColor(selectedTransport);
 
         Log.d(TAG, "Dibujando ruta con " + currentRoutePoints.size() + " puntos");
         currentRoute = drawRoute(currentRoutePoints, routeColor);
@@ -889,7 +889,7 @@ public class MapFragment extends Fragment {
                         currentRoutePoints = routePoints;
                         
                         // Dibujar la ruta
-                        int routeColor = getRouteColor(TransportType.WALK);
+                        int routeColor = getTransportColor(TransportType.WALK);
                         currentRoute = drawRoute(currentRoutePoints, routeColor);
                         
                         if (currentRoute == null) {
@@ -974,7 +974,7 @@ public class MapFragment extends Fragment {
             currentRoutePoints = routePoints;
             
             // Dibujar la ruta
-            int routeColor = getRouteColor(TransportType.WALK);
+            int routeColor = getTransportColor(TransportType.WALK);
             currentRoute = drawRoute(currentRoutePoints, routeColor);
             
             // Añadir icono del medio de transporte en el origen
@@ -1088,7 +1088,7 @@ public class MapFragment extends Fragment {
             drawParadaBus(paradaEntrada, viaje.origen, viaje.linea, TransportType.BUS);
             PolylineOptions lineOptions = new PolylineOptions()
                     .addAll(viaje.linea.obtenerShape())
-                    .color(getRouteColor(TransportType.BUS))
+                    .color(getTransportColor(TransportType.BUS))
                     .width(8f);
             Polyline line = mapGoogle.addPolyline(lineOptions);
 
@@ -1108,11 +1108,11 @@ public class MapFragment extends Fragment {
         }
         else
         {
-            drawVehicle(userPosition, TransportType.WALK, getRouteColor(TransportType.WALK));
+            drawVehicle(userPosition, TransportType.WALK, getTransportColor(TransportType.WALK));
             PolylineOptions lineOptions = new PolylineOptions()
                     .add(userPosition)
                     .add(faculty.position)
-                    .color(getRouteColor(TransportType.WALK))
+                    .color(getTransportColor(TransportType.WALK))
                     .width(8f);
             Polyline line = mapGoogle.addPolyline(lineOptions);
         }
@@ -1344,19 +1344,39 @@ public class MapFragment extends Fragment {
         return routePoints;
     }
 
-    private int getRouteColor(TransportType type) {
+    private int getTransportColor(TransportType type) {
+
+        /*
         switch (type) {
             case WALK:
                 return Color.BLUE;
             case BIKE:
                 return Color.GREEN;
             case BUS:
-                return Color.RED;/*
-            case CAR:
-                return Color.YELLOW;*/
+                return Color.RED;
             default:
                 return Color.GRAY;
         }
+        */
+        int colorResId;
+
+        switch (type) {
+            case WALK:
+                colorResId = R.color.colorWalk;
+                break;
+            case BIKE:
+                colorResId = R.color.colorBike;
+                break;
+            case BUS:
+                colorResId = R.color.colorBus;
+                break;
+            default:
+                colorResId = R.color.colorDefault;
+                break;
+        }
+
+        int color = ContextCompat.getColor(getContext(), colorResId);
+        return color;
     }
 
     private void zoomToShowRoute(ArrayList<LatLng> routePoints) {
@@ -1513,7 +1533,7 @@ public class MapFragment extends Fragment {
     {
         if (!mapReady) return null;
 
-        int color = getRouteColor(type);
+        int color = getTransportColor(type);
         Marker ret = null;
 
         try {
