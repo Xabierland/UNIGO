@@ -8,12 +8,15 @@ import org.checkerframework.checker.units.qual.A;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -83,9 +86,12 @@ public class SimpleBusRouteFinder
         public float longitud;
         public HashMap<String, Integer> orden;
 
+        public HashMap<String, ArrayList<LocalTime>> horas;
+
         public Parada()
         {
             orden = new HashMap<>();
+            horas = new HashMap<>();
         }
     }
 
@@ -124,7 +130,7 @@ public class SimpleBusRouteFinder
         public String idHorario;
         String idParada;
         int orden;
-        String horaSalida;
+        public String horaSalida;
         public String horaLlegada;
     }
 
@@ -285,14 +291,21 @@ public class SimpleBusRouteFinder
                         resultado.linea = linea;
                     }
                 }
-
-
             }
+
+            ArrayList<LocalTime> horasOrigen = resultado.origen.horas.get(resultado.linea.id);
+            Collections.sort(horasOrigen);
+
+            ArrayList<LocalTime> horasDestino = resultado.destino.horas.get(resultado.linea.id);
+            Collections.sort(horasDestino);
 
             Log.d("mitag", "Acabado : ");
             Log.d("mitag", "\t Linea : " + resultado.linea.nombre);
             Log.d("mitag", "\t Parada Entrada : " + resultado.origen.id);
+            Log.d("mitag", "\t Horario : " + resultado.origen.horas.get(resultado.linea.id));
+            Log.d("mitag", "\t Hora Entrada : " + resultado.origen.horas.get(resultado.linea.id).get(0));
             Log.d("mitag", "\t Parada Salida : " + resultado.destino.id);
+            Log.d("mitag", "\t Hora Salida : " + resultado.destino.horas.get(resultado.linea.id).get(0));
 
 
         }
@@ -342,6 +355,7 @@ public class SimpleBusRouteFinder
             Log.d("mitag", "Dibujitos cargados : " + mapaShapes.size());
 
             Date hoy = new Date();
+            LocalTime ahora = LocalTime.now();
 
             LocalDate today = LocalDate.now();
             DayOfWeek dayOfWeek = today.getDayOfWeek();
@@ -350,16 +364,51 @@ public class SimpleBusRouteFinder
             ArrayList<String> lineasCargadas = new ArrayList<>();
 
             Log.d("mitag", "Recorriendo horarios...");
+            // Se recorre cada elemento de trips.xml
             for (Horario horario : mapaHorarios.values())
             {
+                // Horario ~= ServiceJourney
                 if(horario == null)
                 {
                     Log.d("mitag", "\t Horario == null");
                     continue;
                 }
+
+                // Se obtiene el tipo de fecha (ServiceCalendarFrame) de calendar.xml
+
+                boolean muchoLog = false;
+
+                String idFecha = horario.idFecha;
+                Fecha fechaActual = mapaFechas.get(idFecha);
+                if(fechaActual == null)
+                {
+                    if(muchoLog)
+                        Log.d("mitag", "\t fechaActual == null : " + idFecha);
+                    continue;
+                }
+
+                // Se comprueba el dia de la semana
+                if(fechaActual.dias == null || !fechaActual.dias.contains(dayOfWeek))
+                {
+                    if(muchoLog)
+                        Log.d("mitag", "\t dias == null || dia de la semana no valido");
+                    continue;
+                }
+
+                // Y si estamos dentro de la fecha adecuada
+                if (!(   hoy.equals(fechaActual.inicio) ||
+                         hoy.equals(fechaActual.fin   ) ||
+                        ((hoy.after(fechaActual.inicio) && hoy.before(fechaActual.fin)))
+                ))
+                {
+                    Log.d("mitag", "\t Fuera de fecha");
+                    continue;
+                }
+
+                // Si las fechas cuadran, se obtiene la lista de horas de parada
                 List<HoraParada> horas = mapaHorasParadas.get(horario.id);
 
-                if(horas == null)
+                if(horas == null || horas.isEmpty())
                 {
                     Log.d("mitag", "\t horas == null");
                     continue;
@@ -369,30 +418,45 @@ public class SimpleBusRouteFinder
 
                 if(lineasCargadas.contains(idLineaActual))
                 {
-                    continue;
-                }
+                    // Primero revisar que sea de hoy (listo)
+                    // Luego añadir las horas
 
-                String idFecha = horario.idFecha;
-                Fecha fechaActual = mapaFechas.get(idFecha);
-                if(fechaActual == null)
-                {
-                    //Log.d("mitag", "\t fechaActual == null : " + idFecha);
-                    continue;
-                }
+                    for (HoraParada horaParada : horas)
+                    {
+                        Parada parada = mapaParadas.get(horaParada.idParada);
 
-                if(fechaActual.dias == null || !fechaActual.dias.contains(dayOfWeek))
-                {
-                    //Log.d("mitag", "\t dias == null || dia de la semana no valido");
-                    continue;
-                }
+                        if(parada == null || horaParada.horaLlegada == null)
+                        {
+                            continue;
+                        }
 
+                        //Log.d("mitag", "\t Vamos a parsear... " + horaParada.horaLlegada);
+                        LocalTime horaALaQuePara = LocalTime.parse(horaParada.horaLlegada);
+                        //Log.d("mitag", "\t Parseado queda ...");
+                        // Solo añadir horas de autobuses que dodavia no hayan pasado
+                        if(horaALaQuePara.isBefore(ahora))
+                        {
+                            continue;
+                        }
 
-                if (!(    hoy.equals(fechaActual.inicio) ||
-                        hoy.equals(fechaActual.fin) ||
-                        ((hoy.after(fechaActual.inicio) && hoy.before(fechaActual.fin)))
-                    ))
-                {
-                    Log.d("mitag", "\t Fuera de fecha");
+                        ArrayList<LocalTime> horasALasQueParaElAutobusParaEstaLineaEnLaParada = parada.horas.get(idLineaActual);
+
+                        boolean nuevo = false;
+                        if(horasALasQueParaElAutobusParaEstaLineaEnLaParada == null)
+                        {
+                            horasALasQueParaElAutobusParaEstaLineaEnLaParada = new ArrayList<>();
+                            nuevo = true;
+                        }
+
+                        horasALasQueParaElAutobusParaEstaLineaEnLaParada.add(horaALaQuePara);
+
+                        if(nuevo)
+                        {
+                            parada.horas.put(idLineaActual, horasALasQueParaElAutobusParaEstaLineaEnLaParada);
+                        }
+
+                    }
+
                     continue;
                 }
 
@@ -414,6 +478,22 @@ public class SimpleBusRouteFinder
                     {
                         continue;
                     }
+
+                    ArrayList<LocalTime> horasALasQueParaElAutobusParaEstaLineaEnLaParada = new ArrayList<>();
+
+                    if(horaParada.horaLlegada == null)
+                    {
+                        Log.d("mitag", "\t \t horaLlegada == null");
+                        continue;
+                    }
+                    else
+                    {
+                        //Log.d("mitag", "\t \t horaLlegada = " + horaParada.horaLlegada);
+                    }
+                    LocalTime horaALaQuePara = LocalTime.parse(horaParada.horaLlegada);
+
+                    horasALasQueParaElAutobusParaEstaLineaEnLaParada.add(horaALaQuePara);
+                    parada.horas.put(idLineaActual, horasALasQueParaElAutobusParaEstaLineaEnLaParada);
 
                     parada.orden.put(idLineaActual, horaParada.orden);
                     if(lineaActual.paradas == null)
@@ -470,10 +550,11 @@ public class SimpleBusRouteFinder
         }
         catch (Exception e)
         {
-            Log.d("mitag", "\t Excepcion :(");
+            Log.d("mitag", "\t Excepcion :( en cargarDatos");
             if(e.getMessage() != null)
             {
                 Log.d("mitag", e.getMessage());
+                e.printStackTrace();
             }
             else {
                 Log.d("mitag", "e.getMessage() == null");
@@ -758,9 +839,11 @@ public class SimpleBusRouteFinder
                             String time = reader.getElementText();
                             if (insideArrival)
                             {
+
                                 horaParadaActual.horaLlegada = time;
                             } else if (insideDeparture)
                             {
+
                                 horaParadaActual.horaSalida = time;
                             }
                         }

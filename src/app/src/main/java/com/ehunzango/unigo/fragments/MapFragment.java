@@ -1422,7 +1422,7 @@ public class MapFragment extends Fragment {
             return null;
         }
 
-        ret.setTag(parada.nombre + "<<<<>>>>" + linea.nombre);
+        ret.setTag(parada.nombre + "<<<<>>>>" + linea.nombre + "<<<<>>>>" + parada.horas.get(linea.id).get(0).toString());
 
         mapGoogle.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener()
         {
@@ -1437,6 +1437,7 @@ public class MapFragment extends Fragment {
                     String[] partes = texto.split("<<<<>>>>");
                     String parada = partes[0];
                     String linea = partes[1];
+                    String hora = partes[2];
 
                     AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                     builder.setTitle(getContext().getString(R.string.linea) + ": " + linea);
@@ -1445,7 +1446,8 @@ public class MapFragment extends Fragment {
 
 
                     TextView textViewParada = new TextView(getContext());
-                    textViewParada.setText("   " + getContext().getString(R.string.parada) + ": " + parada);
+                    textViewParada.setText("   " + getContext().getString(R.string.parada) + ": " + parada
+                                   +"\n\n" + "   " + getContext().getString(R.string.hora) + ": " + hora);
 
                     LinearLayout layoutName = new LinearLayout(getContext());
                     layoutName.setOrientation(LinearLayout.VERTICAL);

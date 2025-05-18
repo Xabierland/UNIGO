@@ -87,4 +87,5 @@
     <string name="select_faculty">Hautatu helburu bat</string>
     <string name="linea">Linea</string>
     <string name="parada">Geraleku</string>
+    <string name="hora">Hurreno geldialdi ordua</string>
 </resources>

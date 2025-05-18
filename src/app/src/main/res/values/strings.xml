@@ -87,4 +87,5 @@
     <string name="select_faculty">Selecciona un destino</string>
     <string name="linea">Linea</string>
     <string name="parada">Parada</string>
+    <string name="hora">Hora de la próxima parada</string>
 </resources>
