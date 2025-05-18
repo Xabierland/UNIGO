@@ -57,6 +57,7 @@ import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
@@ -205,6 +206,19 @@ public class MapFragment extends Fragment {
             mapFragment.getMapAsync(new OnMapReadyCallback() {
                 @Override
                 public void onMapReady(@NonNull GoogleMap googleMap) {
+
+                    try {
+                        boolean success = googleMap.setMapStyle(
+                                MapStyleOptions.loadRawResourceStyle(getContext(), R.raw.map_style)
+                        );
+
+                        if (!success) {
+                            Log.e("MapStyle", "Estilo no cargado correctamente.");
+                        }
+                    } catch (Exception e) {
+                        Log.e("MapStyle", "No se encontró el archivo de estilo. ", e);
+                    }
+
                     Log.d(TAG, "Mapa listo");
                     mapGoogle = googleMap;
                     mapReady = true;
