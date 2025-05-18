@@ -88,4 +88,13 @@
     <string name="linea">Line</string>
     <string name="parada">Stop</string>
     <string name="hora">Next stop time</string>
+    <string name="arrived">You have arrived to your destination</string>
+    <string name="map_not_ready">Map not ready, wait a moment</string>
+    <string name="choose_transport_and_destination">Please, choose destination and transport</string>
+    <string name="ubicacion_defecto">Location could not be obtained, using default location</string>
+    <string name="error_calcular_ruta">Error when calculating route</string>
+    <string name="error_dibujar_ruta">Error when drawing route</string>
+    <string name="no_posible_generar_ruta">Route could not be generated</string>
+    <string name="datos_cargando">Data is loading</string>
+    <string name="navegacion_finalizada">Navigation finalized</string>
 </resources>
