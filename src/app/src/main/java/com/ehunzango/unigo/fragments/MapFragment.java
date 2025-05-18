@@ -230,6 +230,8 @@ public class MapFragment extends Fragment {
                     mapGoogle = googleMap;
                     mapReady = true;
 
+                    mapGoogle.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+
                     // Configuración del mapa
                     mapGoogle.getUiSettings().setMapToolbarEnabled(false);
                     mapGoogle.getUiSettings().setZoomControlsEnabled(true);
