@@ -81,7 +81,12 @@ public class SimpleBusRouteFinder
         public String id;
         public float latitud;
         public float longitud;
-        public int orden;
+        public HashMap<String, Integer> orden;
+
+        public Parada()
+        {
+            orden = new HashMap<>();
+        }
     }
 
     public class Viaje
@@ -242,6 +247,11 @@ public class SimpleBusRouteFinder
 
                 for (Parada parada : linea.paradas)
                 {
+                    if(parada.orden.get(linea.id) == null)
+                    {
+                        continue;
+                    }
+
                     float distanciaActual = calcularDistancia(latitudOrigen, longitudOrigen, parada);
                     if(distanciaActual < minimaDistanciaOrigen)
                     {
@@ -250,10 +260,15 @@ public class SimpleBusRouteFinder
                     }
                 }
 
-                Log.d("mitag", "\t orden origen : " + paradaOrigen.orden);
+                Log.d("mitag", "\t orden origen : " + paradaOrigen.orden.get(linea.id));
                 Log.d("mitag", "\t Buscando llegada...");
                 for (Parada parada : linea.paradas)
                 {
+                    if(parada.orden.get(linea.id) == null || paradaOrigen.orden.get(linea.id) == null || parada.orden.get(linea.id) < paradaOrigen.orden.get(linea.id))
+                    {
+                        continue;
+                    }
+
                     float distanciaActual = calcularDistancia(latitudDestino, longitudDestino, parada);
                     if(distanciaActual < minimaDistanciaDestino)
                     {
@@ -270,6 +285,7 @@ public class SimpleBusRouteFinder
                         resultado.linea = linea;
                     }
                 }
+
 
             }
 
@@ -296,6 +312,9 @@ public class SimpleBusRouteFinder
         }
         return (float) Math.sqrt(Math.pow(lat - parada.latitud, 2) + Math.pow(lon - parada.longitud, 2));
     }
+
+
+    // --------------------------------  CARGA DE DATOS  ----------------------------------------------
 
     public void cargarDatos(String path)
     {
@@ -363,7 +382,7 @@ public class SimpleBusRouteFinder
 
                 if(fechaActual.dias == null || !fechaActual.dias.contains(dayOfWeek))
                 {
-                    Log.d("mitag", "\t dias == null || dia de la semana no valido");
+                    //Log.d("mitag", "\t dias == null || dia de la semana no valido");
                     continue;
                 }
 
@@ -396,7 +415,7 @@ public class SimpleBusRouteFinder
                         continue;
                     }
 
-                    parada.orden = horaParada.orden;
+                    parada.orden.put(idLineaActual, horaParada.orden);
                     if(lineaActual.paradas == null)
                     {
                         lineaActual.paradas = new ArrayList<>();
@@ -463,10 +482,6 @@ public class SimpleBusRouteFinder
         }
 
     }
-
-
-
-
 
     private Map<String, Parada> loadParadas(String filename) throws Exception
     {
