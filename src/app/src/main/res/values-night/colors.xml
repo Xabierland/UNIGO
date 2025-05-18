@@ -2,8 +2,4 @@
 <resources>
     <color name="button_background">#424242</color> <!-- gris oscuro -->
     <color name="icon_tint">#FFFFFF</color>         <!-- blanco -->
-    <color name="colorWalk">#90CAF9</color> <!-- Azul claro -->
-    <color name="colorBike">#A5D6A7</color> <!-- Verde claro -->
-    <color name="colorBus">#EF9A9A</color> <!-- Rojo claro -->
-    <color name="colorDefault">#BDBDBD</color> <!-- Gris claro -->
 </resources>
