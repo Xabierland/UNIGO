@@ -639,7 +639,6 @@ public class MapFragment extends Fragment {
     private void calculateRoute() {
         // Todo : Idiomas
         if (!mapReady) {
-
             Toast.makeText(getContext(), getContext().getString(R.string.map_not_ready), Toast.LENGTH_SHORT).show();
             return;
         }
@@ -678,18 +677,15 @@ public class MapFragment extends Fragment {
         addAllMarkers();
 
         // Crear y dibujar la ruta según el tipo de transporte
-        if(selectedTransport == TransportType.BUS)
-        {
+        if(selectedTransport == TransportType.BUS) {
             simpleBusRoute();
             return;
         }
-        else if(selectedTransport == TransportType.WALK)
-        {
+        else if(selectedTransport == TransportType.WALK || selectedTransport == TransportType.BIKE) {
             calculateWalkingRoute(userPosition, faculty.position, true);
             return;
         }
-        else
-        {
+        else {
             currentRoutePoints = createRoutePoints(userPosition, faculty.position, selectedTransport);
         }
 
@@ -700,7 +696,6 @@ public class MapFragment extends Fragment {
 
         if (currentRoute == null) {
             Log.e(TAG, "Error al dibujar ruta");
-
             Toast.makeText(getContext(), getContext().getString(R.string.error_calcular_ruta), Toast.LENGTH_SHORT).show();
             return;
         }
@@ -713,22 +708,16 @@ public class MapFragment extends Fragment {
 
         // Mostrar el botón de iniciar navegación
         startNavigationButton.setVisibility(View.VISIBLE);
-
-        // Mostrar mensaje de confirmación
-        //Toast.makeText(getContext(), "Ruta calculada a " + faculty.name, Toast.LENGTH_SHORT).show();
     }
-
-    private void calculateWalkingRoute(LatLng origen, LatLng destino, boolean dibujarIcono)
-    {
+    
+    private void calculateWalkingRoute(LatLng origen, LatLng destino, boolean dibujarIcono) {
         FacultyInfo faculty = facultyHashMap.get(selectedFaculty);
         if (faculty == null) {
             Toast.makeText(getContext(), getContext().getString(R.string.choose_transport_and_destination), Toast.LENGTH_SHORT).show();
-            //Toast.makeText(getContext(), "Selecciona un destino primero", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        //Toast.makeText(getContext(), "Calculando ruta a pie...", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "Iniciando cálculo de ruta a pie desde " + origen.toString() + " hasta " + destino.toString());
+        Log.d(TAG, "Iniciando cálculo de ruta desde " + origen.toString() + " hasta " + destino.toString());
 
         // Realizar la solicitud a la API de Routes en un hilo separado
         new Thread(() -> {
@@ -764,8 +753,9 @@ public class MapFragment extends Fragment {
                 destination.put("location", destinationLocation);
                 requestBody.put("destination", destination);
                 
-                // Modo de transporte
-                requestBody.put("travelMode", "WALK");
+                // Modo de transporte - AQUÍ ESTÁ LA CORRECCIÓN
+                String travelMode = (selectedTransport == TransportType.BIKE) ? "BICYCLE" : "WALK";
+                requestBody.put("travelMode", travelMode);
                 
                 // Opciones de ruta
                 JSONObject routingPreference = new JSONObject();
@@ -873,38 +863,25 @@ public class MapFragment extends Fragment {
                 requireActivity().runOnUiThread(() -> {
                     try {
                         // Limpiar mapa
-                        //mapGoogle.clear();
                         userMarker = null;
-
-                        /*
-                        if (currentRoute != null) {
-                            currentRoute.remove();
-                            currentRoute = null;
-                        }*/
-                        
-                        // Volver a añadir todos los marcadores
-                        //addAllMarkers();
                         
                         // Guardar puntos de la ruta
                         currentRoutePoints = routePoints;
                         
                         // Dibujar la ruta
-                        int routeColor = getTransportColor(TransportType.WALK);
+                        int routeColor = getTransportColor(selectedTransport);
                         currentRoute = drawRoute(currentRoutePoints, routeColor);
                         
                         if (currentRoute == null) {
                             Log.e(TAG, "Error al dibujar ruta");
                             Toast.makeText(getContext(), getContext().getString(R.string.error_dibujar_ruta), Toast.LENGTH_SHORT).show();
-                            //Toast.makeText(getContext(), "Error al dibujar la ruta", Toast.LENGTH_SHORT).show();
                             return;
                         }
 
-                        if(dibujarIcono)
-                        {
+                        if(dibujarIcono) {
                             // Añadir icono del medio de transporte en el origen
-                            drawVehicle(origen, TransportType.WALK, routeColor);
+                            drawVehicle(origen, selectedTransport, routeColor);
                         }
-
                         
                         // Ajustar la cámara para mostrar toda la ruta
                         zoomToShowRoute(currentRoutePoints);
@@ -912,12 +889,9 @@ public class MapFragment extends Fragment {
                         // Mostrar el botón de iniciar navegación
                         startNavigationButton.setVisibility(View.VISIBLE);
                         
-                        // Mostrar mensaje de confirmación
-                        //Toast.makeText(getContext(), "Ruta calculada a " + faculty.name, Toast.LENGTH_SHORT).show();
                     } catch (Exception e) {
                         Log.e(TAG, "Error al actualizar UI: " + e.getMessage(), e);
                         Toast.makeText(getContext(), getContext().getString(R.string.error_dibujar_ruta) + " " + e.getMessage() , Toast.LENGTH_SHORT).show();
-                        //Toast.makeText(getContext(), "Error al mostrar la ruta: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         
                         // Si hay un error, usar el método de fallback
                         fallbackToSimpleRoute(faculty);
@@ -925,7 +899,7 @@ public class MapFragment extends Fragment {
                 });
                 
             } catch (Exception e) {
-                Log.e(TAG, "Error al calcular ruta a pie: " + e.getMessage(), e);
+                Log.e(TAG, "Error al calcular ruta: " + e.getMessage(), e);
                 
                 // Registrar el stack trace completo
                 e.printStackTrace();
@@ -933,7 +907,6 @@ public class MapFragment extends Fragment {
                 // Mostrar mensaje y usar ruta simple como fallback
                 requireActivity().runOnUiThread(() -> {
                     Toast.makeText(getContext(), getContext().getString(R.string.error_calcular_ruta) + " " + e.getMessage() , Toast.LENGTH_SHORT).show();
-                    //Toast.makeText(getContext(), "Error al calcular ruta: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     fallbackToSimpleRoute(faculty);
                 });
             } finally {
@@ -970,15 +943,15 @@ public class MapFragment extends Fragment {
             addAllMarkers();
             
             // Crear ruta simple
-            ArrayList<LatLng> routePoints = createRoutePointsFallBack(userPosition, faculty.position, TransportType.WALK);
+            ArrayList<LatLng> routePoints = createRoutePointsFallBack(userPosition, faculty.position, selectedTransport);
             currentRoutePoints = routePoints;
             
             // Dibujar la ruta
-            int routeColor = getTransportColor(TransportType.WALK);
+            int routeColor = getTransportColor(selectedTransport);
             currentRoute = drawRoute(currentRoutePoints, routeColor);
             
             // Añadir icono del medio de transporte en el origen
-            drawVehicle(userPosition, TransportType.WALK, routeColor);
+            drawVehicle(userPosition, selectedTransport, routeColor);
             
             // Ajustar la cámara para mostrar toda la ruta
             zoomToShowRoute(currentRoutePoints);
@@ -986,11 +959,9 @@ public class MapFragment extends Fragment {
             // Mostrar el botón de iniciar navegación
             startNavigationButton.setVisibility(View.VISIBLE);
             
-            //Toast.makeText(getContext(), "Usando ruta simple alternativa", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Log.e(TAG, "Error incluso en fallback: " + e.getMessage(), e);
             Toast.makeText(getContext(), getContext().getString(R.string.no_posible_generar_ruta), Toast.LENGTH_SHORT).show();
-            //Toast.makeText(getContext(), "No se pudo generar ninguna ruta", Toast.LENGTH_SHORT).show();
         }
     }
 
