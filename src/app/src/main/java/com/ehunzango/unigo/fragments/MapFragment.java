@@ -141,7 +141,7 @@ public class MapFragment extends Fragment {
 
     // Selection
     private FacultyIdentifier selectedFaculty;
-    private TransportType selectedTransport;
+    private TransportType selectedTransport = TransportType.WALK;
     private FloatingActionButton startNavigationButton;
     private FloatingActionButton calculateRouteButton;
 
@@ -172,6 +172,14 @@ public class MapFragment extends Fragment {
         Log.d(TAG, "onViewCreated llamado");
 
         initializeFaculties();
+
+        Bundle bundle = requireArguments();
+
+        if(bundle != null && bundle.getInt("savedSelectedTransport") != -1 && bundle.getInt("savedSelectedFaculty") != -1)
+        {
+            selectedTransport = TransportType.values()[bundle.getInt("savedSelectedTransport")];
+            selectedFaculty = FacultyIdentifier.values()[bundle.getInt("savedSelectedFaculty")];
+        }
 
         // Inicializar cliente de ubicación
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext());
@@ -248,6 +256,32 @@ public class MapFragment extends Fragment {
         startNavigationButton = view.findViewById(R.id.button_start_navigation);
         startNavigationButton.setOnClickListener(v -> startNavigation());
         startNavigationButton.setVisibility(View.GONE); // Oculto inicialmente
+
+        if(bundle != null)
+        {
+            if(bundle.getBoolean("savedCalculatedRoute"))
+            {
+                calculateRoute();
+            }
+        }
+    }
+
+    public void onSaveInstanceState(Bundle bundle)
+    {
+        super.onSaveInstanceState(bundle);
+
+        int fac = -1;
+        int trans = -1;
+        if(selectedFaculty != null)
+        {
+            fac = selectedFaculty.ordinal();
+        }
+        if(selectedTransport != null)
+        {
+            trans = selectedTransport.ordinal();
+        }
+
+        listener.saveSelection(fac, trans, false);
     }
 
     private boolean hasLocationPermission() {
@@ -451,6 +485,11 @@ public class MapFragment extends Fragment {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         dropDownMenu.setAdapter(adapter);
 
+        if(selectedFaculty != null)
+        {
+            dropDownMenu.setSelection(dropDownOrder.indexOf(facultyHashMap.get(selectedFaculty))+1);
+        }
+
         dropDownMenu.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -526,6 +565,11 @@ public class MapFragment extends Fragment {
         ImageSpinnerAdapter adapter = new ImageSpinnerAdapter(requireContext(), items);
 
         dropDownTransportes.setAdapter(adapter);
+
+        if(selectedTransport != null)
+        {
+            dropDownTransportes.setSelection(selectedTransport.ordinal());
+        }
 
         // Listener del Spinner
         dropDownTransportes.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -1529,5 +1573,7 @@ public class MapFragment extends Fragment {
 
     public interface ListenerFragmentMap {
         boolean askLocationPermission();
+
+        void saveSelection(int selectedFaculty, int selectedTransport, boolean calculatedRoute);
     }
 }
