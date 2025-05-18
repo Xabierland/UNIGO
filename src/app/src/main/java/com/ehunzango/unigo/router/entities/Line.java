@@ -76,7 +76,7 @@ public class Line {
     }
 
     public Line dup() {
-        Line nLine = new Line(this.name, this.type, new ArrayList<>());
+        Line nLine = new Line(this.name + "-flip", this.type, new ArrayList<>());
         List<Node> nodes = this.node_list.stream()
                 .map(n -> n.clone(nLine))
                 .collect(Collectors.toList());

@@ -7,11 +7,14 @@ import com.ehunzango.unigo.router.entities.Node;
 import com.ehunzango.unigo.router.utils.DistanceCache;
 
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.PriorityQueue;
+import java.util.stream.Collectors;
 
 // NOTE: this will solve for public transport data, no walk or car transports, those are going to be
 //       done by google API calls, sad stuff :(
@@ -21,6 +24,8 @@ public class RouteFinder {
     //       public transport data)
     private final static float WALK_SPEED = 1.0f / 1.3f; // seconds / meters
     private final static float OTHER_TRANSPORT_SPEED = WALK_SPEED / 400; // seconds / meters
+    private final static float WALK_PENALTY = 40000;
+    private final static float WALK_PENALTY2 = 400;
     private final static String TAG = "RouteFinder";
 
     private final DistanceCache distanceCache = new DistanceCache();
@@ -57,65 +62,89 @@ public class RouteFinder {
 
         dist.put(start, 0.0f);
         queue.add(new Step(start, 0.0f));
+        relax(queue, dist, prev, start, goal, (float)start.fast_manhattan(goal) * WALK_PENALTY);
+        queue.stream().limit(5).forEach(s -> Log.d(TAG, String.format("%s: %f", s.node, s.cost)));
 
+        Log.d(TAG, "TARGETS:");
+        Set<Node> targets = allLines.stream()
+                .filter(line -> !line.name.endsWith("-flip") && line != start.line)
+                .map(line -> {
+            Node node = null;
+            double min_d = Double.MAX_VALUE;
+            for (Node n : line.node_list) {
+                double d = distanceCache.getDistance(n, goal);
+                if (d < min_d) {
+                    min_d = d;
+                    node = n;
+                }
+            }
+            Log.d(TAG, String.format("\t%s", node));
+            return node;
+        }).collect(Collectors.toSet());
+        Log.d(TAG, "TARGETS size: " + targets.size());
+
+        int N = 0;
         while (!queue.isEmpty()) {
             Step current = queue.poll();
             System.out.println(current);
             Node currNode = current.node;
 
-            if (current.cost > dist.getOrDefault(currNode, Float.POSITIVE_INFINITY)) { continue; }
+            // if (current.cost > dist.getOrDefault(currNode, Float.POSITIVE_INFINITY)) { continue; }
 
-            if (currNode.isSameCordsAs(goal)) { return reconstructPath(prev, goal); }
+            // if (currNode.isSameCordsAs(goal)) { return reconstructPath(prev, goal); }
+            if (targets.contains(currNode)) {
+                prev.put(goal, currNode);
+
+                return reconstructPath(prev, goal);
+            }
 
             Integer index = currNode.line.node_map.get(currNode);
 
-            if (index == null) {
-                continue;
-            }
-
             // 1. Move forward on the same line
-            if (index + 1 < currNode.line.node_list.size()) {
+            if (index != null && index + 1 < currNode.line.node_list.size()) {
                 // NOTE: remember that bidirectional lines are split into 2 individual lines :)
                 Node next = currNode.line.node_list.get(index + 1);
                 float delta = currNode.line.deltas.get(index) * OTHER_TRANSPORT_SPEED; // cost from curr -> next
-                float heuristic = (float)next.fast_manhattan(goal); // hcost from next -> goal
-                relax(queue, dist, prev, currNode, next, delta + heuristic);
+                // float heuristic = (float)next.fast_manhattan(goal); // hcost from next -> goal
+                relax(queue, dist, prev, currNode, next, delta);
             }
 
             // 2. Transfers: look for the nearest cords in different lines
             for (Line line : allLines) {
                 if (line == currNode.line) continue;
 
-                float min_distance = Float.POSITIVE_INFINITY;
+                float min_distance = Float.MAX_VALUE;
                 Node node = null;
                 for (Node n : line.node_list) {
                     float d = distanceCache.getDistance(currNode, n);
                     if (d < min_distance) {
                         min_distance = d;
                         node = n;
-                        if (d == 0.0f) break;
+                        // if (d == 0.0f) break;
                     }
                 }
 
-                // TODO: take into account when is going to come the next line and add the
-                //       wait time.
                 float transferPenalty;
                 if (min_distance == 0) {
                     transferPenalty = 0.0f;
                 } else {
-                    // TODO: we need to check the walk distance to the point and check if we will be
-                    //       able to get the incoming bus, train... Or we need to add even more time
-                    transferPenalty = min_distance * WALK_SPEED;
+                    // transferPenalty = (float)node.fast_manhattan(goal) * WALK_SPEED;
+                    transferPenalty = (float)node.fast_manhattan(currNode) * WALK_SPEED;
                 }
 
                 if (node != null) {
-                    float heuristic = (float)node.fast_manhattan(goal); // hcost from next -> goal
-                    relax(queue, dist, prev, currNode, node, transferPenalty + heuristic);
+                    // float heuristic = (float)node.fast_manhattan(goal); // hcost from next -> goal
+                    relax(queue, dist, prev, currNode, node, transferPenalty);
                 }
             }
 
             // 3. Walk: go from where we are to the destination
             relax(queue, dist, prev, currNode, goal, (float)currNode.fast_manhattan(goal));
+
+            Log.d(TAG, String.format("loop: %d", N++));
+            queue.stream()
+                    .limit(5)
+                    .forEach(s -> Log.d(TAG, String.format("%s: %f", s.node, s.cost)));
         }
 
         return null; // No path found
@@ -149,7 +178,7 @@ public class RouteFinder {
         StringBuilder sb = new StringBuilder();
         sb.append("------------------------------------------\n");
         for (Node node: path) {
-            sb.append(String.format("\t[%d]: %s\n", i, node));
+            sb.append(String.format("\t[%d]: %s\n", i++, node));
         }
         sb.append("------------------------------------------\n");
         Log.d("RouteFinder", "path\n" + sb.toString());

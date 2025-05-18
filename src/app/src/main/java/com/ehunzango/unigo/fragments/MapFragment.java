@@ -1254,12 +1254,14 @@ public class MapFragment extends Fragment {
             return createRoutePointsFallBack(start, end, transportType);
         }
 
-        Line dummy = new Line("dummy", Line.Type.WALK, new ArrayList<>());
-        Node s = new Node(start.latitude, start.longitude, dummy);
-        Node e = new Node(end.latitude, end.longitude, dummy);
-        dummy.addNode(s, (float)s.dist(e));
-        dummy.addNode(e, Float.POSITIVE_INFINITY);
-        lines.add(dummy);
+        Line dummyS = new Line("dummyStart", Line.Type.WALK, new ArrayList<>());
+        Line dummyE = new Line("dummyEnd", Line.Type.WALK, new ArrayList<>());
+        Node s = new Node(start.latitude, start.longitude, dummyS);
+        Node e = new Node(end.latitude, end.longitude, dummyE);
+        dummyS.addNode(s, Float.POSITIVE_INFINITY);
+        dummyE.addNode(e, Float.POSITIVE_INFINITY);
+        lines.add(dummyS);
+        // lines.add(dummyE);
 
         List<Node> path = rf.findShortestPath(s, e, lines);
 
