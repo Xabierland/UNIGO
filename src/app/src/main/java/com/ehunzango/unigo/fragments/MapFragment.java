@@ -1136,6 +1136,8 @@ public class MapFragment extends Fragment {
             // Borrar la ruta actual pero mantener los marcadores
             if (currentRoute != null) {
                 currentRoute.remove();
+                mapGoogle.clear();
+                addAllMarkers();
                 currentRoute = null;
             }
             
@@ -1203,15 +1205,16 @@ public class MapFragment extends Fragment {
         Log.d(TAG, "Actualizando marcador en: " + userPosition.latitude + ", " + userPosition.longitude);
 
         // Si ya existe un marcador, actualizar su posición
-        if (userMarker != null) {
-            userMarker.setPosition(userPosition);
-        } else {
-            // Si no existe, crear uno nuevo
-            userMarker = mapGoogle.addMarker(new MarkerOptions()
-                    .position(userPosition)
-                    .icon(getBitmapFromVectorDrawable(R.drawable.location_on_24px, Color.BLUE))
-                    .title("Tu ubicación"));
+        if (userMarker != null)
+        {
+            userMarker.remove();// setPosition(userPosition);
         }
+        // Si no existe, crear uno nuevo
+        userMarker = mapGoogle.addMarker(new MarkerOptions()
+                .position(userPosition)
+                .icon(getBitmapFromVectorDrawable(R.drawable.location_on_24px, Color.BLUE))
+                .title(getContext().getString(R.string.tu_ubicacion)));
+
     }
 
     private final RouteFinder rf = new RouteFinder();

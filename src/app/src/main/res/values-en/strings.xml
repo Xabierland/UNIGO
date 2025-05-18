@@ -97,4 +97,5 @@
     <string name="no_posible_generar_ruta">Route could not be generated</string>
     <string name="datos_cargando">Data is loading</string>
     <string name="navegacion_finalizada">Navigation finalized</string>
+    <string name="tu_ubicacion">Your location</string>
 </resources>
