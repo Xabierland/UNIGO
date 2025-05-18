@@ -867,9 +867,11 @@ public class MapFragment extends Fragment {
                         
                         // Guardar puntos de la ruta
                         currentRoutePoints = routePoints;
+
+                        TransportType auxSelectedTransport = (selectedTransport == TransportType.BIKE) ? TransportType.BIKE : TransportType.WALK;
                         
                         // Dibujar la ruta
-                        int routeColor = getTransportColor(selectedTransport);
+                        int routeColor = getTransportColor(auxSelectedTransport);
                         currentRoute = drawRoute(currentRoutePoints, routeColor);
                         
                         if (currentRoute == null) {
@@ -880,7 +882,7 @@ public class MapFragment extends Fragment {
 
                         if(dibujarIcono) {
                             // Añadir icono del medio de transporte en el origen
-                            drawVehicle(origen, selectedTransport, routeColor);
+                            drawVehicle(origen, auxSelectedTransport, routeColor);
                         }
                         
                         // Ajustar la cámara para mostrar toda la ruta
