@@ -35,7 +35,7 @@ public class Node {
 
     @Override
     public String toString() {
-        return String.format("%s(%.2f, %.2f)", line.toString(), x, y);
+        return String.format("%s(%.4f, %.4f)", line.toString(), x, y);
     }
 
     // [stackoverflow](https://stackoverflow.com/questions/639695/how-to-convert-latitude-or-longitude-to-meters)
