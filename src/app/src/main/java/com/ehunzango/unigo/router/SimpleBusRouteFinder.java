@@ -297,10 +297,13 @@ public class SimpleBusRouteFinder
 
             ArrayList<LocalTime> horasOrigenCopia = new ArrayList<>(horasOrigen);
 
+            Log.d("mitag", "Hora actual : " + LocalTime.now());
+
             for (LocalTime hora : horasOrigenCopia)
             {
-                if(hora != null && hora.isAfter(LocalTime.now()))
+                if(hora != null && hora.isBefore(LocalTime.now()))
                 {
+                    Log.d("mitag", "Quitar hora : " + hora);
                     horasOrigen.remove(hora);
                 }
             }
@@ -315,8 +318,9 @@ public class SimpleBusRouteFinder
 
             for (LocalTime hora : horasDestinoCopia)
             {
-                if(hora != null && hora.isAfter(LocalTime.now()))
+                if(hora != null && hora.isBefore(LocalTime.now()))
                 {
+                    Log.d("mitag", "Quitar hora : " + hora);
                     horasDestino.remove(hora);
                 }
             }
