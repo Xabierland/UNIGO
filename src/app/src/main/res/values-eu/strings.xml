@@ -87,4 +87,14 @@
     <string name="select_faculty">Hautatu helburu bat</string>
     <string name="linea">Linea</string>
     <string name="parada">Geraleku</string>
+    <string name="hora">Hurreno geldialdi ordua</string>
+    <string name="arrived">Zure helmugara iritsi zara!</string>
+    <string name="map_not_ready">Mapa oraindik ez dago prest, itxaron apur bat</string>
+    <string name="choose_transport_and_destination">"Mesedez, hautatu helmuga eta garraiobide bat "</string>
+    <string name="ubicacion_defecto">"Ezin izan da zure kokapena lortu, lehenetsitako kokapena erabiliz "</string>
+    <string name="error_calcular_ruta">"Errorea ibilbidea kalkulatzean "</string>
+    <string name="error_dibujar_ruta">"Errorea ibilbidea marraztean "</string>
+    <string name="no_posible_generar_ruta">"Ezin izan da ibilbiderik sortu "</string>
+    <string name="datos_cargando">"Datuak kargatzen ari dira "</string>
+    <string name="navegacion_finalizada">"Nabigazioa amaituta "</string>
 </resources>

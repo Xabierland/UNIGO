@@ -141,7 +141,7 @@ public class MapFragment extends Fragment {
 
     // Selection
     private FacultyIdentifier selectedFaculty;
-    private TransportType selectedTransport;
+    private TransportType selectedTransport = TransportType.WALK;
     private FloatingActionButton startNavigationButton;
     private FloatingActionButton calculateRouteButton;
 
@@ -172,6 +172,14 @@ public class MapFragment extends Fragment {
         Log.d(TAG, "onViewCreated llamado");
 
         initializeFaculties();
+
+        Bundle bundle = requireArguments();
+
+        if(bundle != null && bundle.getInt("savedSelectedTransport") != -1 && bundle.getInt("savedSelectedFaculty") != -1)
+        {
+            selectedTransport = TransportType.values()[bundle.getInt("savedSelectedTransport")];
+            selectedFaculty = FacultyIdentifier.values()[bundle.getInt("savedSelectedFaculty")];
+        }
 
         // Inicializar cliente de ubicación
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext());
@@ -248,6 +256,32 @@ public class MapFragment extends Fragment {
         startNavigationButton = view.findViewById(R.id.button_start_navigation);
         startNavigationButton.setOnClickListener(v -> startNavigation());
         startNavigationButton.setVisibility(View.GONE); // Oculto inicialmente
+
+        if(bundle != null)
+        {
+            if(bundle.getBoolean("savedCalculatedRoute"))
+            {
+                calculateRoute();
+            }
+        }
+    }
+
+    public void onSaveInstanceState(Bundle bundle)
+    {
+        super.onSaveInstanceState(bundle);
+
+        int fac = -1;
+        int trans = -1;
+        if(selectedFaculty != null)
+        {
+            fac = selectedFaculty.ordinal();
+        }
+        if(selectedTransport != null)
+        {
+            trans = selectedTransport.ordinal();
+        }
+
+        listener.saveSelection(fac, trans, false);
     }
 
     private boolean hasLocationPermission() {
@@ -319,7 +353,7 @@ public class MapFragment extends Fragment {
                                         results);
 
                                 if (results[0] < 50) { // 50 metros del destino
-                                    Toast.makeText(getContext(), "¡Has llegado a tu destino!", Toast.LENGTH_LONG).show();
+                                    Toast.makeText(getContext(),  getContext().getString(R.string.arrived), Toast.LENGTH_LONG).show();
                                     stopNavigation();
                                 }
                             }
@@ -451,6 +485,11 @@ public class MapFragment extends Fragment {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         dropDownMenu.setAdapter(adapter);
 
+        if(selectedFaculty != null)
+        {
+            dropDownMenu.setSelection(dropDownOrder.indexOf(facultyHashMap.get(selectedFaculty))+1);
+        }
+
         dropDownMenu.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -460,7 +499,21 @@ public class MapFragment extends Fragment {
                 position = position-1;
 
                 FacultyInfo info = dropDownOrder.get(position);
+
                 selectFaculty(info.id);
+
+                int fac = -1;
+                int trans = -1;
+                if(selectedFaculty != null)
+                {
+                    fac = selectedFaculty.ordinal();
+                }
+                if(selectedTransport != null)
+                {
+                    trans = selectedTransport.ordinal();
+                }
+
+                listener.saveSelection(fac, trans, false);
             }
 
             @Override
@@ -527,12 +580,30 @@ public class MapFragment extends Fragment {
 
         dropDownTransportes.setAdapter(adapter);
 
+        if(selectedTransport != null)
+        {
+            dropDownTransportes.setSelection(selectedTransport.ordinal());
+        }
+
         // Listener del Spinner
         dropDownTransportes.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 TransportType type = TransportType.values()[position];
                 transportSelected(type);
+
+                int fac = -1;
+                int trans = -1;
+                if(selectedFaculty != null)
+                {
+                    fac = selectedFaculty.ordinal();
+                }
+                if(selectedTransport != null)
+                {
+                    trans = selectedTransport.ordinal();
+                }
+
+                listener.saveSelection(fac, trans, false);
             }
 
             @Override
@@ -547,13 +618,14 @@ public class MapFragment extends Fragment {
     private void calculateRoute() {
         // Todo : Idiomas
         if (!mapReady) {
-            Toast.makeText(getContext(), "El mapa aún no está listo, espera un momento", Toast.LENGTH_SHORT).show();
+
+            Toast.makeText(getContext(), getContext().getString(R.string.map_not_ready), Toast.LENGTH_SHORT).show();
             return;
         }
 
         // Verificar que se haya seleccionado un destino y un tipo de transporte
         if (selectedFaculty == null || selectedTransport == null) {
-            Toast.makeText(getContext(), "Por favor, selecciona un destino y un medio de transporte", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getContext().getString(R.string.choose_transport_and_destination), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -562,7 +634,7 @@ public class MapFragment extends Fragment {
             // Usar posición por defecto si no hay ubicación real
             Log.d(TAG, "No hay ubicación, usando ubicación por defecto");
             userPosition = DEFAULT_LOCATION;
-            Toast.makeText(getContext(), "No se pudo obtener tu ubicación, usando ubicación por defecto", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getContext().getString(R.string.ubicacion_defecto), Toast.LENGTH_SHORT).show();
         }
 
         // Obtener la facultad seleccionada
@@ -607,7 +679,8 @@ public class MapFragment extends Fragment {
 
         if (currentRoute == null) {
             Log.e(TAG, "Error al dibujar ruta");
-            Toast.makeText(getContext(), "Error al dibujar la ruta", Toast.LENGTH_SHORT).show();
+
+            Toast.makeText(getContext(), getContext().getString(R.string.error_calcular_ruta), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -621,18 +694,19 @@ public class MapFragment extends Fragment {
         startNavigationButton.setVisibility(View.VISIBLE);
 
         // Mostrar mensaje de confirmación
-        Toast.makeText(getContext(), "Ruta calculada a " + faculty.name, Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getContext(), "Ruta calculada a " + faculty.name, Toast.LENGTH_SHORT).show();
     }
 
     private void calculateWalkingRoute(LatLng origen, LatLng destino, boolean dibujarIcono)
     {
         FacultyInfo faculty = facultyHashMap.get(selectedFaculty);
         if (faculty == null) {
-            Toast.makeText(getContext(), "Selecciona un destino primero", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getContext().getString(R.string.choose_transport_and_destination), Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getContext(), "Selecciona un destino primero", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        Toast.makeText(getContext(), "Calculando ruta a pie...", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getContext(), "Calculando ruta a pie...", Toast.LENGTH_SHORT).show();
         Log.d(TAG, "Iniciando cálculo de ruta a pie desde " + origen.toString() + " hasta " + destino.toString());
 
         // Realizar la solicitud a la API de Routes en un hilo separado
@@ -799,7 +873,8 @@ public class MapFragment extends Fragment {
                         
                         if (currentRoute == null) {
                             Log.e(TAG, "Error al dibujar ruta");
-                            Toast.makeText(getContext(), "Error al dibujar la ruta", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), getContext().getString(R.string.error_dibujar_ruta), Toast.LENGTH_SHORT).show();
+                            //Toast.makeText(getContext(), "Error al dibujar la ruta", Toast.LENGTH_SHORT).show();
                             return;
                         }
 
@@ -817,10 +892,11 @@ public class MapFragment extends Fragment {
                         startNavigationButton.setVisibility(View.VISIBLE);
                         
                         // Mostrar mensaje de confirmación
-                        Toast.makeText(getContext(), "Ruta calculada a " + faculty.name, Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(getContext(), "Ruta calculada a " + faculty.name, Toast.LENGTH_SHORT).show();
                     } catch (Exception e) {
                         Log.e(TAG, "Error al actualizar UI: " + e.getMessage(), e);
-                        Toast.makeText(getContext(), "Error al mostrar la ruta: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), getContext().getString(R.string.error_dibujar_ruta) + " " + e.getMessage() , Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(getContext(), "Error al mostrar la ruta: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         
                         // Si hay un error, usar el método de fallback
                         fallbackToSimpleRoute(faculty);
@@ -835,7 +911,8 @@ public class MapFragment extends Fragment {
                 
                 // Mostrar mensaje y usar ruta simple como fallback
                 requireActivity().runOnUiThread(() -> {
-                    Toast.makeText(getContext(), "Error al calcular ruta: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), getContext().getString(R.string.error_calcular_ruta) + " " + e.getMessage() , Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getContext(), "Error al calcular ruta: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     fallbackToSimpleRoute(faculty);
                 });
             } finally {
@@ -888,10 +965,11 @@ public class MapFragment extends Fragment {
             // Mostrar el botón de iniciar navegación
             startNavigationButton.setVisibility(View.VISIBLE);
             
-            Toast.makeText(getContext(), "Usando ruta simple alternativa", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getContext(), "Usando ruta simple alternativa", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Log.e(TAG, "Error incluso en fallback: " + e.getMessage(), e);
-            Toast.makeText(getContext(), "No se pudo generar ninguna ruta", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getContext().getString(R.string.no_posible_generar_ruta), Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getContext(), "No se pudo generar ninguna ruta", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -935,7 +1013,7 @@ public class MapFragment extends Fragment {
 
         if(SimpleBusRouteFinder.getInstance().loaded == false)
         {
-            Toast.makeText(getContext(), "Los datos se estan cargando", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getContext().getString(R.string.datos_cargando), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -947,7 +1025,8 @@ public class MapFragment extends Fragment {
         if(viaje == null)
         {
             Log.d("mitag", "\t Viaje == null :(");
-            Toast.makeText(getContext(), "No se pudo encontrar una ruta", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getContext().getString(R.string.error_calcular_ruta), Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getContext(), "No se pudo encontrar una ruta", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -1021,7 +1100,7 @@ public class MapFragment extends Fragment {
 
     private void startNavigation() {
         if (currentRoutePoints == null || currentRoutePoints.isEmpty()) {
-            Toast.makeText(getContext(), "Primero debes calcular una ruta", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getContext(), "Primero debes calcular una ruta", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -1039,7 +1118,7 @@ public class MapFragment extends Fragment {
             mapGoogle.animateCamera(CameraUpdateFactory.newLatLngZoom(userPosition, 18f));
         }
 
-        Toast.makeText(getContext(), "Navegación iniciada", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getContext(), "Navegación iniciada", Toast.LENGTH_SHORT).show();
     }
 
     private void stopNavigation() {
@@ -1084,7 +1163,7 @@ public class MapFragment extends Fragment {
             }
         }
 
-        Toast.makeText(getContext(), "Navegación finalizada", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), getContext().getString(R.string.navegacion_finalizada), Toast.LENGTH_SHORT).show();
     }
 
     // Método para ajustar la opacidad de un color
@@ -1290,7 +1369,7 @@ public class MapFragment extends Fragment {
         }
 
         // Mostrar un indicador de carga
-        Toast.makeText(getContext(), "Obteniendo ubicación...", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getContext(), "Obteniendo ubicación...", Toast.LENGTH_SHORT).show();
 
         try {
             // Configurar solicitud de ubicación con alta precisión
@@ -1310,7 +1389,7 @@ public class MapFragment extends Fragment {
                             if (updateMap && mapReady) {
                                 updateUserPositionOnMap();
                                 mapGoogle.animateCamera(CameraUpdateFactory.newLatLngZoom(userPosition, 15f));
-                                Toast.makeText(getContext(), "Ubicación obtenida", Toast.LENGTH_SHORT).show();
+                                //Toast.makeText(getContext(), "Ubicación obtenida", Toast.LENGTH_SHORT).show();
                             }
                         } else {
                             Log.d(TAG, "No hay última ubicación, solicitando actualización...");
@@ -1330,7 +1409,7 @@ public class MapFragment extends Fragment {
                                                     if (updateMap && mapReady) {
                                                         updateUserPositionOnMap();
                                                         mapGoogle.animateCamera(CameraUpdateFactory.newLatLngZoom(userPosition, 15f));
-                                                        Toast.makeText(getContext(), "Ubicación obtenida", Toast.LENGTH_SHORT).show();
+                                                        //Toast.makeText(getContext(), "Ubicación obtenida", Toast.LENGTH_SHORT).show();
                                                     }
                                                 } else {
                                                     Log.d(TAG, "No se pudo obtener ubicación, usando ubicación por defecto");
@@ -1339,7 +1418,7 @@ public class MapFragment extends Fragment {
                                                     if (updateMap && mapReady) {
                                                         updateUserPositionOnMap();
                                                         mapGoogle.animateCamera(CameraUpdateFactory.newLatLngZoom(userPosition, 15f));
-                                                        Toast.makeText(getContext(), "Usando ubicación por defecto", Toast.LENGTH_SHORT).show();
+                                                        //Toast.makeText(getContext(), "Usando ubicación por defecto", Toast.LENGTH_SHORT).show();
                                                     }
                                                 }
                                             }
@@ -1424,7 +1503,7 @@ public class MapFragment extends Fragment {
             return null;
         }
 
-        ret.setTag(parada.nombre + "<<<<>>>>" + linea.nombre);
+        ret.setTag(parada.nombre + "<<<<>>>>" + linea.nombre + "<<<<>>>>" + parada.horas.get(linea.id).get(0).toString());
 
         mapGoogle.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener()
         {
@@ -1439,6 +1518,7 @@ public class MapFragment extends Fragment {
                     String[] partes = texto.split("<<<<>>>>");
                     String parada = partes[0];
                     String linea = partes[1];
+                    String hora = partes[2];
 
                     AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                     builder.setTitle(getContext().getString(R.string.linea) + ": " + linea);
@@ -1447,7 +1527,8 @@ public class MapFragment extends Fragment {
 
 
                     TextView textViewParada = new TextView(getContext());
-                    textViewParada.setText("   " + getContext().getString(R.string.parada) + ": " + parada);
+                    textViewParada.setText("   " + getContext().getString(R.string.parada) + ": " + parada
+                                   +"\n\n" + "   " + getContext().getString(R.string.hora) + ": " + hora);
 
                     LinearLayout layoutName = new LinearLayout(getContext());
                     layoutName.setOrientation(LinearLayout.VERTICAL);
@@ -1529,5 +1610,7 @@ public class MapFragment extends Fragment {
 
     public interface ListenerFragmentMap {
         boolean askLocationPermission();
+
+        void saveSelection(int selectedFaculty, int selectedTransport, boolean calculatedRoute);
     }
 }
