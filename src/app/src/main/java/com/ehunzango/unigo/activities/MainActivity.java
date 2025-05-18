@@ -65,6 +65,13 @@ public class MainActivity extends       BaseActivity
         SETTINGS
     }
 
+    // Saving data
+
+    int savedSelectedFaculty = -1;
+    int savedSelectedTransport = -1;
+    boolean savedCalculatedRoute = false;
+
+
     //              +--------------------------------------------------------------------------+
     //              |                                                                          |
     //              |                             INICIALIZACION                               |
@@ -93,6 +100,10 @@ public class MainActivity extends       BaseActivity
         else if (savedInstanceState != null)
         {
             actualFragment = FragmentType.values()[savedInstanceState.getInt("actualFragment")];
+
+            savedSelectedFaculty = savedInstanceState.getInt("savedSelectedFaculty");
+            savedSelectedTransport = savedInstanceState.getInt("savedSelectedTransport");
+            savedCalculatedRoute = savedInstanceState.getBoolean("savedCalculatedRoute");
         }
 
         //              +--------------------------------------------------------+
@@ -286,6 +297,10 @@ public class MainActivity extends       BaseActivity
     {
         super.onSaveInstanceState(bundle);
 
+        bundle.putInt("savedSelectedFaculty", savedSelectedFaculty);
+        bundle.putInt("savedSelectedTransport", savedSelectedTransport);
+        bundle.putBoolean("savedCalculatedRoute", savedCalculatedRoute);
+
         bundle.putInt("actualFragment", actualFragment.ordinal());
     }
 
@@ -317,8 +332,16 @@ public class MainActivity extends       BaseActivity
 
     private void openMapFragment()
     {
+        Bundle bundle = new Bundle();
+        bundle.putInt("savedSelectedFaculty", savedSelectedFaculty);
+        bundle.putInt("savedSelectedTransport", savedSelectedTransport);
+        bundle.putBoolean("savedCalculatedRoute", savedCalculatedRoute);
+
+        MapFragment mapFragment = new MapFragment();
+        mapFragment.setArguments(bundle);
+
         actualFragment = FragmentType.MAP;
-        replaceFragment(R.id.fragment_container, new MapFragment(), "map", false);
+        replaceFragment(R.id.fragment_container, mapFragment, "map", false);
     }
 
     private void openProfileFragment() {
@@ -343,10 +366,21 @@ public class MainActivity extends       BaseActivity
     // ----- LISTENER MAP
 
     @Override
-    public boolean askLocationPermission()
-    {
-        return checkLocationPermission();
+    public boolean askLocationPermission() {
+        // Ya no necesitamos solicitar permisos aquí, solo devolvemos el estado actual
+        return ContextCompat.checkSelfPermission(this, 
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
+
+    @Override
+    public void saveSelection(int selectedFaculty, int selectedTransport, boolean calculatedRoute)
+    {
+        savedSelectedFaculty = selectedFaculty;
+        savedSelectedTransport = selectedTransport;
+        savedCalculatedRoute = calculatedRoute;
+    }
+
+
 
     // ----- LISTENER PROFILE
 

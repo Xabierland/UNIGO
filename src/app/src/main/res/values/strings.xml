@@ -91,4 +91,17 @@
     <string name="relations_school">Facultad de Relaciones Laborales y Trabajo Social</string>
     <string name="medicine_school">Unidad Docente de Medicina</string>
     <string name="select_faculty">Selecciona un destino</string>
+    <string name="linea">Linea</string>
+    <string name="parada">Parada</string>
+    <string name="hora">Hora de la próxima parada</string>
+    <string name="arrived">¡Has llegado a tu destino!</string>
+    <string name="map_not_ready">El mapa aún no está listo, espera un momento</string>
+    <string name="choose_transport_and_destination">Por favor, selecciona un destino y un medio de transporte</string>
+    <string name="ubicacion_defecto">No se pudo obtener tu ubicación, usando ubicación por defecto</string>
+    <string name="error_calcular_ruta">Error al calcular la ruta</string>
+    <string name="error_dibujar_ruta">Error al dibujar la ruta</string>
+    <string name="no_posible_generar_ruta">No se pudo generar ninguna ruta</string>
+    <string name="datos_cargando">Los datos se estan cargando</string>
+    <string name="navegacion_finalizada">Navegación finalizada</string>
+    <string name="tu_ubicacion">Tu ubicación</string>
 </resources>
