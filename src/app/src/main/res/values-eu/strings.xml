@@ -62,6 +62,7 @@
     <string name="anonymous_user">Erabiltzaile anonimoa</string>
 
     <!-- Configuración -->
+    <string name="profile_photo_description">Profileko irudia</string>
     <string name="settings_title">Ezarpenak</string>
     <string name="theme_dialog_title">Aplikazioaren gaia</string>
     <string name="theme_summary">Aukeratu aplikazioaren gaia</string>
@@ -99,4 +100,8 @@
     <string name="datos_cargando">"Datuak kargatzen ari dira "</string>
     <string name="navegacion_finalizada">"Nabigazioa amaituta "</string>
     <string name="tu_ubicacion">Zure kokapena</string>
+    <string name="choose_photo_title">Perfila aldatu</string>
+    <string name="camera_option">Argazkia atera</string>
+    <string name="gallery_option">Galeriatik aukeratu</string>
+    <string name="no_bus_route_availeable">Ez dago autobus linearik eskuragarri</string>
 </resources>

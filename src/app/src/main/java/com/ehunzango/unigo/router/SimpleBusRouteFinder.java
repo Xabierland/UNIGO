@@ -327,13 +327,19 @@ public class SimpleBusRouteFinder
 
             Collections.sort(horasDestino);
 
+            if(horasOrigen.isEmpty() || horasDestino.isEmpty())
+            {
+                return null;
+            }
+
             Log.d("mitag", "Acabado : ");
             Log.d("mitag", "\t Linea : " + resultado.linea.nombre);
             Log.d("mitag", "\t Parada Entrada : " + resultado.origen.id);
             Log.d("mitag", "\t Horario : " + resultado.origen.horas.get(resultado.linea.id));
+            /*
             Log.d("mitag", "\t Hora Entrada : " + resultado.origen.horas.get(resultado.linea.id).get(0));
             Log.d("mitag", "\t Parada Salida : " + resultado.destino.id);
-            Log.d("mitag", "\t Hora Salida : " + resultado.destino.horas.get(resultado.linea.id).get(0));
+            Log.d("mitag", "\t Hora Salida : " + resultado.destino.horas.get(resultado.linea.id).get(0));*/
 
 
         }

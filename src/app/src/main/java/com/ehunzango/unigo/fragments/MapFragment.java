@@ -1019,7 +1019,10 @@ public class MapFragment extends Fragment {
         LatLng paradaSalida = null;
         if(viaje == null) {
             Log.d("mitag", "\t Viaje == null :(");
-            Toast.makeText(getContext(), getContext().getString(R.string.error_calcular_ruta), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getContext().getString(R.string.no_bus_route_availeable), Toast.LENGTH_SHORT).show();
+
+            // Caso en que el usuario ya está en la parada de destino
+
             return;
         }
 
