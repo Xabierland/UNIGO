@@ -65,6 +65,13 @@ public class MainActivity extends       BaseActivity
         SETTINGS
     }
 
+    // Saving data
+
+    int savedSelectedFaculty = -1;
+    int savedSelectedTransport = -1;
+    boolean savedCalculatedRoute = false;
+
+
     //              +--------------------------------------------------------------------------+
     //              |                                                                          |
     //              |                             INICIALIZACION                               |
@@ -83,10 +90,20 @@ public class MainActivity extends       BaseActivity
         // Inicializar servicios
         authService = FirebaseAuthService.getInstance();
 
-        // Obtener los datos del saved instance
-        if(savedInstanceState != null)
+        // Obtener el fragmento desde el intent (en caso de reinicio por ajustes)
+        if (getIntent() != null && getIntent().hasExtra("startFragment")) {
+            int fragmentOrdinal = getIntent().getIntExtra("startFragment", FragmentType.MAP.ordinal());
+            actualFragment = FragmentType.values()[fragmentOrdinal];
+            getIntent().removeExtra("startFragment");
+        }
+        // Obtener los datos del saved instance (desde el estado guardado, si no hay intent)
+        else if (savedInstanceState != null)
         {
             actualFragment = FragmentType.values()[savedInstanceState.getInt("actualFragment")];
+
+            savedSelectedFaculty = savedInstanceState.getInt("savedSelectedFaculty");
+            savedSelectedTransport = savedInstanceState.getInt("savedSelectedTransport");
+            savedCalculatedRoute = savedInstanceState.getBoolean("savedCalculatedRoute");
         }
 
         //              +--------------------------------------------------------+
@@ -255,7 +272,7 @@ public class MainActivity extends       BaseActivity
     public void logout() {
         // Mostrar diálogo de confirmación
         new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.logout_title)
+                .setTitle(R.string.action_logout)
                 .setMessage(R.string.logout_message)
                 .setPositiveButton(R.string.dialog_button_send, (dialog, which) -> {
                     // Cerrar sesión
@@ -279,6 +296,10 @@ public class MainActivity extends       BaseActivity
     public void onSaveInstanceState(Bundle bundle)
     {
         super.onSaveInstanceState(bundle);
+
+        bundle.putInt("savedSelectedFaculty", savedSelectedFaculty);
+        bundle.putInt("savedSelectedTransport", savedSelectedTransport);
+        bundle.putBoolean("savedCalculatedRoute", savedCalculatedRoute);
 
         bundle.putInt("actualFragment", actualFragment.ordinal());
     }
@@ -311,8 +332,16 @@ public class MainActivity extends       BaseActivity
 
     private void openMapFragment()
     {
+        Bundle bundle = new Bundle();
+        bundle.putInt("savedSelectedFaculty", savedSelectedFaculty);
+        bundle.putInt("savedSelectedTransport", savedSelectedTransport);
+        bundle.putBoolean("savedCalculatedRoute", savedCalculatedRoute);
+
+        MapFragment mapFragment = new MapFragment();
+        mapFragment.setArguments(bundle);
+
         actualFragment = FragmentType.MAP;
-        replaceFragment(R.id.fragment_container, new MapFragment(), "map", false);
+        replaceFragment(R.id.fragment_container, mapFragment, "map", false);
     }
 
     private void openProfileFragment() {
@@ -337,10 +366,21 @@ public class MainActivity extends       BaseActivity
     // ----- LISTENER MAP
 
     @Override
-    public boolean askLocationPermission()
-    {
-        return checkLocationPermission();
+    public boolean askLocationPermission() {
+        // Ya no necesitamos solicitar permisos aquí, solo devolvemos el estado actual
+        return ContextCompat.checkSelfPermission(this, 
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
+
+    @Override
+    public void saveSelection(int selectedFaculty, int selectedTransport, boolean calculatedRoute)
+    {
+        savedSelectedFaculty = selectedFaculty;
+        savedSelectedTransport = selectedTransport;
+        savedCalculatedRoute = calculatedRoute;
+    }
+
+
 
     // ----- LISTENER PROFILE
 

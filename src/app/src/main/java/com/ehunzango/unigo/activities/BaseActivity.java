@@ -1,6 +1,9 @@
 package com.ehunzango.unigo.activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -10,11 +13,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentManager;
+import androidx.preference.PreferenceManager;
 
 import com.ehunzango.unigo.R;
 import com.google.android.material.snackbar.Snackbar;
+
+import java.util.Locale;
 
 /**
  * Actividad base que proporciona funcionalidades comunes para todas las actividades
@@ -24,6 +31,8 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        applyAppTheme();
+        applyAppLocale();
         super.onCreate(savedInstanceState);
         // Ya no llamamos a initViews() aquí para permitir que las actividades hijas
         // establezcan su setContentView() primero
@@ -195,4 +204,53 @@ public abstract class BaseActivity extends AppCompatActivity {
         }
         return false;
     }
+
+    /**
+     * Método para reiniciar la app con las preferencias seleccionadas
+     */
+    public void restartAppWithSettings() {
+        Intent mainIntent = new Intent(this, MainActivity.class);
+
+        // Volver al fragmento de settings
+        mainIntent.putExtra("startFragment", MainActivity.FragmentType.SETTINGS.ordinal());
+        mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(mainIntent);
+        finish();
+    }
+
+    private void applyAppLocale() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String langCode = prefs.getString("idioma", "en");
+
+        Locale locale = new Locale(langCode);
+        Locale.setDefault(locale);
+
+        Resources resources = getResources();
+        Configuration config = resources.getConfiguration();
+
+        if (!locale.equals(config.getLocales().get(0))) {
+            config.setLocale(locale);
+            config.setLayoutDirection(locale);
+            resources.updateConfiguration(config, resources.getDisplayMetrics());
+        }
+    }
+
+    private void applyAppTheme() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String themePref = prefs.getString("tema", "system");
+
+        switch (themePref) {
+            case "light":
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                break;
+            case "dark":
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                break;
+            case "system":
+            default:
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                break;
+        }
+    }
+
 }

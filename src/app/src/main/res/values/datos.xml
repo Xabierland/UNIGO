@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="temas">
+        <item>@string/theme_light</item>
+        <item>@string/theme_dark</item>
+        <item>@string/theme_system</item>
+    </string-array>
+    <string-array name="codigosTemas">
+        <item>light</item>
+        <item>dark</item>
+        <item>system</item>
+    </string-array>
+    <string-array name="idiomas">
+        <item>@string/lang_es</item>
+        <item>@string/lang_eu</item>
+        <item>@string/lang_en</item>
+    </string-array>
+    <string-array name="codigosIdiomas">
+        <item>es</item>
+        <item>eu</item>
+        <item>en</item>
+    </string-array>
+</resources>

@@ -110,6 +110,12 @@ public class FirebaseUserService {
                 .addOnCompleteListener(listener);
     }
 
+    // Actualizar URL de foto de perfil
+    public void updatePhotoUrl(String userId, String photoUrl, OnCompleteListener<Void> listener) {
+        mDatabase.child(userId).child("photoUrl").setValue(photoUrl)
+                .addOnCompleteListener(listener);
+    }
+
     // Eliminar usuario
     public void deleteUser(String userId, OnCompleteListener<Void> listener) {
         mDatabase.child(userId).removeValue()

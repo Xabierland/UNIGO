@@ -2,4 +2,10 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="button_background">#E0E0E0</color> <!-- gris claro -->
+    <color name="icon_tint">#212121</color>         <!-- casi negro -->
+    <color name="colorWalk">#90CAF9</color> <!-- Azul claro -->
+    <color name="colorBike">#A5D6A7</color> <!-- Verde claro -->
+    <color name="colorBus">#EF9A9A</color> <!-- Rojo claro -->
+    <color name="colorDefault">#BDBDBD</color> <!-- Gris claro -->
 </resources>

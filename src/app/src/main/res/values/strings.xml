@@ -1,6 +1,7 @@
 <resources>
     <!-- Cadenas de texto de la aplicacion base -->
     <string name="app_name">UNIGO</string>
+    
     <!-- Cadenas de texto de la pantalla de carga -->
     <string name="swipe_up_description">Desliza hacia arriba para continuar</string>
     <string name="logo_description">Logo de entidad</string>
@@ -55,10 +56,52 @@
     <string name="nav_map">Mapa</string>
     <string name="nav_profile">Perfil</string>
     <string name="nav_settings">Ajustes</string>
+
+    <!-- Perfil -->
     <string name="action_logout">Cerrar sesión</string>
-    <string name="logout_title">Cerrar sesión</string>
     <string name="logout_message">¿Estás seguro de que quieres cerrar sesión?</string>
     <string name="anonymous_user">Usuario anónimo</string>
+    <string name="choose_photo_title">Cambiar foto de perfil</string>
+    <string name="camera_option">Tomar foto con la cámara</string>
+    <string name="gallery_option">Seleccionar de la galería</string>
+    <string name="profile_photo_description">Foto de perfil</string>
+
+    <!-- Configuración -->
+    <string name="settings_title">Ajustes</string>
+    <string name="theme_dialog_title">Tema de la aplicación</string>
+    <string name="theme_summary">Elige el tema para la aplicación</string>
+    <string name="theme_title">Elige una configuración de tema</string>
+    <string name="lang_dialog_title">Idioma de la aplicación</string>
+    <string name="lang_summary">Elige el idioma para la aplicación</string>
+    <string name="lang_title">Elige una configuración de idioma</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="theme_system">Modo del sistema</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_eu">Euskera</string>
+    <string name="lang_en">Inglés</string>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="engineer_school">Escuela de Ingeniería de Vitoria-Gasteiz</string>
+    <string name="economy_school">Facultad de Economía y Empresa</string>
+    <string name="sports_school">Facultad de Educación y Deporte</string>
+    <string name="pharmacy_school">Facultad de Farmacia</string>
+    <string name="letter_school">Facultad de Letras</string>
+    <string name="relations_school">Facultad de Relaciones Laborales y Trabajo Social</string>
+    <string name="medicine_school">Unidad Docente de Medicina</string>
+    <string name="select_faculty">Selecciona un destino</string>
+    <string name="linea">Linea</string>
+    <string name="parada">Parada</string>
+    <string name="hora">Hora de la próxima parada</string>
+    <string name="arrived">¡Has llegado a tu destino!</string>
+    <string name="map_not_ready">El mapa aún no está listo, espera un momento</string>
+    <string name="choose_transport_and_destination">Por favor, selecciona un destino y un medio de transporte</string>
+    <string name="ubicacion_defecto">No se pudo obtener tu ubicación, usando ubicación por defecto</string>
+    <string name="error_calcular_ruta">Error al calcular la ruta</string>
+    <string name="error_dibujar_ruta">Error al dibujar la ruta</string>
+    <string name="no_posible_generar_ruta">No se pudo generar ninguna ruta</string>
+    <string name="datos_cargando">Los datos se estan cargando</string>
+    <string name="navegacion_finalizada">Navegación finalizada</string>
+    <string name="tu_ubicacion">Tu ubicación</string>
 </resources>
