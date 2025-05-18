@@ -1,0 +1,102 @@
+<resources>
+    <!-- Cadenas de texto de la aplicacion base -->
+    <string name="app_name">UNIGO</string>
+    <!-- Cadenas de texto de la pantalla de carga -->
+    <string name="swipe_up_description">Swipe up to continue</string>
+    <string name="logo_description">Entity logo</string>
+
+    <!-- Cadenas de texto de la pantalla de inicio de sesión -->
+    <string name="login_title">Access UNIGO</string>
+    <string name="login_tab">Log in</string>
+    <string name="register_tab">Register</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Password</string>
+    <string name="name_hint">Full name</string>
+    <string name="confirm_password_hint">Confirm password</string>
+    <string name="login_button">Log in</string>
+    <string name="register_button">Register</string>
+    <string name="forgot_password">Did you forget your password?</string>
+    <string name="or_text">or continue with</string>
+    <string name="google_sign_in">Continue with Google</string>
+    <string name="phone_sign_in">Continue with phone</string>
+    <string name="anonymous_sign_in">Continue without an account</string>
+
+    <!-- Verificación por teléfono -->
+    <string name="phone_verification_title">Telephone verification</string>
+    <string name="phone_verification_subtitle">We will send you a verification code by SMS</string>
+    <string name="phone_hint">Telephone number (+34 123456789)</string>
+    <string name="send_code_button">Send code</string>
+    <string name="verification_code_hint">Verification code</string>
+    <string name="code_sent_message">A code has been sent to your phone</string>
+    <string name="resend_code_button">Resend</string>
+    <string name="verify_code_button">Verify</string>
+
+    <!-- Mensajes de error -->
+    <string name="error_invalid_email">Invalid email address</string>
+    <string name="error_invalid_password">The password must be at least 6 characters long</string>
+    <string name="error_passwords_not_match">The passwords don\'t match</string>
+    <string name="error_empty_name">The name must not be empty</string>
+    <string name="error_invalid_phone">Invalid telephone number</string>
+    <string name="error_empty_code">The verification code must not be empty</string>
+
+    <!-- Mensajes de éxito -->
+    <string name="success_login">Successful login</string>
+    <string name="success_register">Successful registration</string>
+    <string name="success_verification">Successful verification</string>
+    <string name="success_reset_password">An email has been sent to reset your password</string>
+
+    <!-- Diálogos -->
+    <string name="dialog_reset_password_title">Reset password</string>
+    <string name="dialog_reset_password_message">Enter your email address to receive password reset instructions</string>
+    <string name="dialog_button_send">Send</string>
+    <string name="dialog_button_cancel">Cancel</string>
+
+    <!-- Navegación principal -->
+    <string name="nav_map">Map</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Perfil -->
+    <string name="action_logout">Log out</string>
+    <string name="logout_message">Are you sure you want to log out?</string>
+    <string name="anonymous_user">Anonymous user</string>
+
+    <!-- Configuración -->
+    <string name="settings_title">Settings</string>
+    <string name="theme_dialog_title">App theme</string>
+    <string name="theme_summary">Choose the theme for the application</string>
+    <string name="theme_title">Choose a theme configuration</string>
+    <string name="lang_dialog_title">App language</string>
+    <string name="lang_summary">Choose the language for the application</string>
+    <string name="lang_title">Choose a language configuration</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">System mode</string>
+    <string name="lang_es">Spanish</string>
+    <string name="lang_eu">Basque</string>
+    <string name="lang_en">English</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="engineer_school">Vitoria-Gasteiz Engineering School</string>
+    <string name="economy_school">Faculty of Economics and Business</string>
+    <string name="sports_school">Faculty of Education and Sports</string>
+    <string name="pharmacy_school">"Faculty of Pharmacy "</string>
+    <string name="letter_school">Faculty of Letters</string>
+    <string name="relations_school">Faculty of Labor Relations and Social Work</string>
+    <string name="medicine_school">Teaching Unit of Medicine</string>
+    <string name="select_faculty">Select a destination</string>
+    <string name="linea">Line</string>
+    <string name="parada">Stop</string>
+    <string name="hora">Next stop time</string>
+    <string name="arrived">You have arrived to your destination</string>
+    <string name="map_not_ready">Map not ready, wait a moment</string>
+    <string name="choose_transport_and_destination">Please, choose destination and transport</string>
+    <string name="ubicacion_defecto">Location could not be obtained, using default location</string>
+    <string name="error_calcular_ruta">Error when calculating route</string>
+    <string name="error_dibujar_ruta">Error when drawing route</string>
+    <string name="no_posible_generar_ruta">Route could not be generated</string>
+    <string name="datos_cargando">Data is loading</string>
+    <string name="navegacion_finalizada">Navigation finalized</string>
+    <string name="tu_ubicacion">Your location</string>
+</resources>

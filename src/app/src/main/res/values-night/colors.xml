@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="button_background">#424242</color> <!-- gris oscuro -->
+    <color name="icon_tint">#FFFFFF</color>         <!-- blanco -->
+</resources>
