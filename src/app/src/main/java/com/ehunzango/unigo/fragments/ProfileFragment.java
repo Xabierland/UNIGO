@@ -594,27 +594,29 @@ public class ProfileFragment extends Fragment
         if (getContext() == null) return;
 
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getContext().getPackageManager()) != null) {
-            // Crear el archivo donde irá la foto
-            File photoFile = null;
-            try {
-                photoFile = createImageFile();
-            } catch (IOException ex) {
-                Log.e(TAG, "Error creando archivo de imagen", ex);
-                showToast("Error al crear archivo para la foto");
-                return;
-            }
+        
+        // Crear el archivo donde irá la foto
+        File photoFile = null;
+        try {
+            photoFile = createImageFile();
+        } catch (IOException ex) {
+            Log.e(TAG, "Error creando archivo de imagen", ex);
+            showToast("Error al crear archivo para la foto");
+            return;
+        }
 
-            // Continuar solo si el archivo se creó correctamente
-            if (photoFile != null) {
+        // Continuar solo si el archivo se creó correctamente
+        if (photoFile != null) {
+            try {
                 currentPhotoUri = FileProvider.getUriForFile(getContext(),
                         "com.ehunzango.unigo.fileprovider",
                         photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, currentPhotoUri);
                 takePictureLauncher.launch(takePictureIntent);
+            } catch (Exception e) {
+                Log.e(TAG, "Error al configurar la cámara: " + e.getMessage(), e);
+                showToast("Error al abrir la cámara");
             }
-        } else {
-            showToast("No se encontró una aplicación de cámara");
         }
     }
 
