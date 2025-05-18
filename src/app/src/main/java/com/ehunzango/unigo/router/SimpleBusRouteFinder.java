@@ -294,9 +294,33 @@ public class SimpleBusRouteFinder
             }
 
             ArrayList<LocalTime> horasOrigen = resultado.origen.horas.get(resultado.linea.id);
+
+            ArrayList<LocalTime> horasOrigenCopia = new ArrayList<>(horasOrigen);
+
+            for (LocalTime hora : horasOrigenCopia)
+            {
+                if(hora != null && hora.isAfter(LocalTime.now()))
+                {
+                    horasOrigen.remove(hora);
+                }
+            }
+
             Collections.sort(horasOrigen);
 
+
+
             ArrayList<LocalTime> horasDestino = resultado.destino.horas.get(resultado.linea.id);
+
+            ArrayList<LocalTime> horasDestinoCopia = new ArrayList<>(horasDestino);
+
+            for (LocalTime hora : horasDestinoCopia)
+            {
+                if(hora != null && hora.isAfter(LocalTime.now()))
+                {
+                    horasDestino.remove(hora);
+                }
+            }
+
             Collections.sort(horasDestino);
 
             Log.d("mitag", "Acabado : ");
