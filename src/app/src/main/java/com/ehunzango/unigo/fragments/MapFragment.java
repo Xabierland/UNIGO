@@ -6,6 +6,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -20,7 +21,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -37,9 +37,7 @@ import com.ehunzango.unigo.R;
 import com.ehunzango.unigo.adapters.ImageSpinnerAdapter;
 import com.ehunzango.unigo.adapters.SpinnerImageItem;
 import com.ehunzango.unigo.router.RouteFinder;
-import com.ehunzango.unigo.router.RouteFinder;
 import com.ehunzango.unigo.router.SimpleBusRouteFinder;
-import com.ehunzango.unigo.router.adapters.NETEXAdapter;
 import com.ehunzango.unigo.router.entities.Line;
 import com.ehunzango.unigo.router.entities.Node;
 import com.ehunzango.unigo.services.RouteService;
@@ -208,9 +206,18 @@ public class MapFragment extends Fragment {
                 public void onMapReady(@NonNull GoogleMap googleMap) {
 
                     try {
-                        boolean success = googleMap.setMapStyle(
-                                MapStyleOptions.loadRawResourceStyle(getContext(), R.raw.map_style)
-                        );
+
+                        int nightModeFlags = getContext().getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+
+                        boolean success = false;
+                        if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES)
+                        {
+                            success = googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(getContext(), R.raw.map_style_dark));
+                        } else
+                        {
+                            success = googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(getContext(), R.raw.map_style));
+                        }
+
 
                         if (!success) {
                             Log.e("MapStyle", "Estilo no cargado correctamente.");
