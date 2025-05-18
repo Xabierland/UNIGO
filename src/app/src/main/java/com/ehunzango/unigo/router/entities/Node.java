@@ -40,15 +40,14 @@ public class Node {
 
     // [stackoverflow](https://stackoverflow.com/questions/639695/how-to-convert-latitude-or-longitude-to-meters)
     public double dist(Node other) {
-        var R = 6378.137; // Radius of earth in KM
+        var R = 63781370; // Radius of earth in m
         var dLat = other.x * Math.PI / 180 - this.x * Math.PI / 180;
         var dLon = other.y * Math.PI / 180 - this.y * Math.PI / 180;
         var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
                 Math.cos(this.x * Math.PI / 180) * Math.cos(other.x * Math.PI / 180) *
                         Math.sin(dLon/2) * Math.sin(dLon/2);
         var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        var d = R * c;
-        return d * 1000; // meters
+        return R * c;
     }
 
     // NOTE, we can remove the "* METERS_PER_DEGREE", if we just want a fast heuristic, and not realistic values
@@ -66,7 +65,7 @@ public class Node {
         return Math.abs(this.x - other.x + this.y - other.y) * METERS_PER_DEGREE;
     }
 
-    public boolean isSameCordsAs(Node goal) {
-        return this.x == goal.x && this.y == goal.y;
+    public boolean isSameCordsAs(Node other) {
+        return this.x == other.x && this.y == other.y;
     }
 }
